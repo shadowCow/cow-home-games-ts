@@ -1,0 +1,11 @@
+# compiled output
+dist
+
+# dependencies
+node_modules
+
+# desktop files
+.DS_Store
+
+# local notes
+notes.md

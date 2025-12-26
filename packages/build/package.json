@@ -1,5 +1,5 @@
 {
-  "name": "@cow-home-games/build",
+  "name": "@cow-sunday/build",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",

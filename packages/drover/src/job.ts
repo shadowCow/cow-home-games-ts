@@ -1,20 +1,23 @@
-export type JobFn = () => Promise<void> | void;
+import type { Action } from './actions';
+import { ActionExecutor } from './executor';
 
 export interface JobConfig {
   name: string;
-  fn: JobFn;
+  actions: Action[];
   dependencies?: Job[];
 }
 
 export class Job {
   public readonly name: string;
-  private fn: JobFn;
+  private actions: Action[];
   private deps: Job[];
+  private executor: ActionExecutor;
 
   constructor(config: JobConfig) {
     this.name = config.name;
-    this.fn = config.fn;
+    this.actions = config.actions;
     this.deps = config.dependencies || [];
+    this.executor = new ActionExecutor();
   }
 
   async execute(): Promise<void> {
@@ -22,7 +25,9 @@ export class Job {
     const start = Date.now();
 
     try {
-      await this.fn();
+      for (const action of this.actions) {
+        await this.executor.execute(action);
+      }
       const duration = Date.now() - start;
       console.log(`[${this.name}] Completed in ${duration}ms`);
     } catch (error) {

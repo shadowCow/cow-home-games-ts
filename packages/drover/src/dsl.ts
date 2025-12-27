@@ -1,11 +1,12 @@
-import { Job, JobFn } from './job';
+import { Job } from './job';
 import { TaskRunner } from './runner';
+import type { Action } from './actions';
 
 export class BuildDSL {
   private runner: TaskRunner = new TaskRunner();
 
-  job(name: string, fn: JobFn): Job {
-    const job = new Job({ name, fn });
+  job(name: string, actions: Action[]): Job {
+    const job = new Job({ name, actions });
     this.runner.register(job);
     return job;
   }

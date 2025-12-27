@@ -1,13 +1,17 @@
 {
-  "name": "@cow-sunday/build",
+  "name": "@cow-sunday/drover",
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "build-tool": "./dist/index.js"
+    "drover": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "tsx": "^4.21.0"
   }
 }

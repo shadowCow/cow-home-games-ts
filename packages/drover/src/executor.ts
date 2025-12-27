@@ -1,10 +1,7 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Action } from './actions';
-
-const execAsync = promisify(exec);
 
 export class ActionExecutor {
   async execute(action: Action): Promise<void> {
@@ -23,14 +20,25 @@ export class ActionExecutor {
   }
 
   private async executeShell(action: { command: string; cwd?: string }): Promise<void> {
-    try {
-      const { stdout, stderr } = await execAsync(action.command, { cwd: action.cwd });
-      if (stdout) console.log(stdout.trim());
-      if (stderr) console.error(stderr.trim());
-    } catch (error: any) {
-      console.error(`Command failed: ${action.command}`);
-      throw error;
-    }
+    return new Promise((resolve, reject) => {
+      const child = spawn(action.command, {
+        shell: true,
+        cwd: action.cwd,
+        stdio: 'inherit'
+      });
+
+      child.on('exit', (code) => {
+        if (code === 0) {
+          resolve();
+        } else {
+          reject(new Error(`Command failed with exit code ${code}: ${action.command}`));
+        }
+      });
+
+      child.on('error', (error) => {
+        reject(error);
+      });
+    });
   }
 
   private async executeLog(action: { message: string }): Promise<void> {

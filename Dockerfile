@@ -7,7 +7,6 @@ WORKDIR /app
 COPY package*.json ./
 COPY packages/client/package*.json ./packages/client/
 COPY packages/server/package*.json ./packages/server/
-COPY packages/drover/package*.json ./packages/drover/
 
 # Install dependencies
 RUN npm install
@@ -15,11 +14,9 @@ RUN npm install
 # Copy source files
 COPY . .
 
-# Build drover first
-RUN npm run build --workspace=@cow-sunday/drover
-
-# Use drover to build everything
-RUN npx drover build
+# Build all packages using npm scripts
+RUN npm run build -w @cow-sunday/server
+RUN npm run build -w @cow-sunday/client
 
 # Production stage
 FROM node:24-alpine

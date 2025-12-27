@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY packages/client/package*.json ./packages/client/
 COPY packages/server/package*.json ./packages/server/
-COPY packages/build/package*.json ./packages/build/
+COPY packages/drover/package*.json ./packages/drover/
 
 # Install dependencies
 RUN npm install
@@ -15,14 +15,14 @@ RUN npm install
 # Copy source files
 COPY . .
 
-# Build client (creates static assets in packages/client/dist)
-RUN npm run build --workspace=@cow-sunday/client
+# Build drover first
+RUN npm run build --workspace=@cow-sunday/drover
 
-# Build server (compiles TypeScript to JavaScript)
-RUN npm run build --workspace=@cow-sunday/server
+# Use drover to build everything
+RUN npx drover all
 
 # Production stage
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 

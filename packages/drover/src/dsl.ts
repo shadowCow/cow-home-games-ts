@@ -2,7 +2,7 @@ import { Job } from './job';
 import { TaskRunner } from './runner';
 import type { Action } from './actions';
 
-export class BuildDSL {
+export class JobGraphDSL {
   private runner: TaskRunner = new TaskRunner();
 
   job(name: string, actions: Action[]): Job {
@@ -16,6 +16,6 @@ export class BuildDSL {
   }
 }
 
-export function createBuild(): BuildDSL {
-  return new BuildDSL();
+export function createJobGraph(): JobGraphDSL {
+  return new JobGraphDSL();
 }

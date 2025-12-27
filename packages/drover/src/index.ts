@@ -17,7 +17,7 @@ program
   .version('1.0.0');
 
 program
-  .argument('[task]', 'task to run', 'all')
+  .argument('[task]', 'task to run', 'build')
   .option('-f, --file <path>', 'path to build file', 'drover.ts')
   .action((task, options) => {
     const buildFile = path.resolve(process.cwd(), options.file);
@@ -28,11 +28,9 @@ program
     }
 
     // Use tsx to run the loader with the build file
-    const tsxPath = path.join(__dirname, '../node_modules/.bin/tsx');
     const loaderPath = path.join(__dirname, 'loader.js');
-    const child = spawn(tsxPath, [loaderPath, buildFile, task], {
-      stdio: 'inherit',
-      shell: true
+    const child = spawn('npx', ['tsx', loaderPath, buildFile, task], {
+      stdio: 'inherit'
     });
 
     child.on('exit', (code) => {

@@ -19,7 +19,7 @@ COPY . .
 RUN npm run build --workspace=@cow-sunday/drover
 
 # Use drover to build everything
-RUN npx drover all
+RUN npx drover build
 
 # Production stage
 FROM node:24-alpine

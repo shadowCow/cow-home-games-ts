@@ -19,6 +19,11 @@ const serverBuild = graph.job('server:build', [
 ]);
 
 // Define a job that builds everything
-graph.job('build', [
+const build = graph.job('build', [
   log('All packages built successfully!')
 ]).dependsOn(droverBuild, clientBuild, serverBuild);
+
+// Define a job to run the Docker container
+graph.job('docker:run', [
+  shell('docker compose up --build')
+]);

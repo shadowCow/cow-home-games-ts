@@ -21,6 +21,9 @@ RUN npm run build -w @cow-sunday/client
 # Production stage
 FROM node:24-alpine
 
+# Create non-root user with specific UID
+RUN adduser -D -u 1001 appuser
+
 WORKDIR /app
 
 # Copy package files
@@ -37,10 +40,17 @@ COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
 
 # Create data directory for persistent application data
-RUN mkdir -p /var/lib/cow-home-games-ts
+RUN mkdir -p /var/lib/cow-home-games-ts && \
+    chown -R appuser:appuser /var/lib/cow-home-games-ts
+
+# Change ownership of app directory
+RUN chown -R appuser:appuser /app
 
 # Set up volume for persistent data
 VOLUME ["/var/lib/cow-home-games-ts"]
+
+# Switch to non-root user
+USER appuser
 
 # Expose server port
 EXPOSE 3000

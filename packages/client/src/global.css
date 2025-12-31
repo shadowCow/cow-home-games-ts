@@ -27,24 +27,24 @@
 
   /* Theme colors - use these throughout the app */
   --color-primary: var(--palette-primary-base);
-  --color-primary-hover: var(--palette-primary-dark);
-  --color-primary-active: var(--palette-primary-darker);
+  --color-primary-hover: var(--palette-primary-light);
+  --color-primary-active: var(--palette-primary-base);
   --color-primary-contrast: rgb(255, 255, 255);
 
   --color-secondary: var(--palette-secondary-base);
-  --color-secondary-hover: var(--palette-secondary-dark);
+  --color-secondary-hover: var(--palette-secondary-light);
   --color-secondary-contrast: rgb(255, 255, 255);
 
-  --color-background: var(--palette-neutral-100);
-  --color-surface: rgb(255, 255, 255);
-  --color-surface-variant: var(--palette-neutral-200);
+  --color-background: var(--palette-neutral-800);
+  --color-surface: var(--palette-neutral-700);
+  --color-surface-variant: var(--palette-neutral-600);
 
-  --color-text-primary: var(--palette-neutral-900);
-  --color-text-secondary: var(--palette-neutral-600);
-  --color-text-disabled: var(--palette-neutral-400);
+  --color-text-primary: var(--palette-neutral-100);
+  --color-text-secondary: var(--palette-neutral-300);
+  --color-text-disabled: var(--palette-neutral-500);
 
-  --color-border: var(--palette-neutral-300);
-  --color-border-focus: var(--palette-primary-base);
+  --color-border: var(--palette-neutral-600);
+  --color-border-focus: var(--palette-primary-light);
 
   --color-success: var(--palette-success);
   --color-error: var(--palette-error);
@@ -62,8 +62,8 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

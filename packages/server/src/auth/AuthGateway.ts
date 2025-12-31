@@ -1,4 +1,4 @@
-import { User } from './User';
+import { User } from '../domain/User';
 
 export interface AuthGateway {
   login(username: string, password: string): Promise<{ token: string; user: User }>;

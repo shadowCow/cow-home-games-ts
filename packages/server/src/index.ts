@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { AuthGatewayJwt } from './auth/AuthGatewayJwt';
 import { registerAuthRoutes } from './auth/AuthApi';
+import { UserRepoInMemory } from './user-repo/UserRepoInMemory';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +20,8 @@ await fastify.register(fastifyJwt, {
 });
 
 // Wire up dependencies
-const authGateway = new AuthGatewayJwt(fastify.jwt);
+const userRepo = new UserRepoInMemory();
+const authGateway = new AuthGatewayJwt(fastify.jwt, userRepo);
 
 // Register auth routes
 registerAuthRoutes(fastify, authGateway);

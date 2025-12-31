@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LoginPage } from "./LoginPage";
+import { LoginPage } from "./LoginPage/LoginPage";
 import { AuthGateway } from "../services/auth/AuthGateway";
 import { User } from "../services/auth/User";
 

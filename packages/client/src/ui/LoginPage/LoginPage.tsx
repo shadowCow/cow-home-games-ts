@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { AuthGateway } from "../services/auth/AuthGateway";
-import { User } from "../services/auth/User";
+import { AuthGateway } from "../../services/auth/AuthGateway";
+import { User } from "../../services/auth/User";
+import { TextField } from "../common/TextField/TextField";
+import { Button } from "../common/Button/Button";
+import styles from "./LoginPage.module.css";
 
 export function LoginPage(props: {
   authGateway: AuthGateway;
@@ -27,37 +30,35 @@ export function LoginPage(props: {
   };
 
   return (
-    <div>
-      <h1>Cow Home Games</h1>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="username">Username:</label>
-          <input
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <h1 className={styles.title}>Cow Home Games</h1>
+        <h2 className={styles.subtitle}>Login</h2>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <TextField
             id="username"
             type="text"
+            label="Username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={setUsername}
             disabled={loading}
             required
           />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
+          <TextField
             id="password"
             type="password"
+            label="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             disabled={loading}
             required
           />
-        </div>
-        {error && <div style={{ color: "red" }}>{error}</div>}
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          {error && <div className={styles.error}>{error}</div>}
+          <Button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

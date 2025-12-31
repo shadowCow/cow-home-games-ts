@@ -1,7 +1,10 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifyJwt from '@fastify/jwt';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { AuthGatewayJwt } from './auth/AuthGatewayJwt';
+import { registerAuthRoutes } from './auth/AuthApi';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +12,17 @@ const __dirname = path.dirname(__filename);
 const fastify = Fastify({
   logger: true
 });
+
+// Register JWT plugin
+await fastify.register(fastifyJwt, {
+  secret: 'supersecretkey' // TODO: Move to environment variable
+});
+
+// Wire up dependencies
+const authGateway = new AuthGatewayJwt(fastify.jwt);
+
+// Register auth routes
+registerAuthRoutes(fastify, authGateway);
 
 // API routes
 fastify.get('/api/hello', async () => {

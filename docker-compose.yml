@@ -1,7 +1,7 @@
 services:
   app:
     container_name: cow-games
-    image: raspberrypi.local:5000/cow-home-games-ts:latest
+    image: localhost:5000/cow-home-games-ts:latest
     ports:
       - "3000:3000"
     environment:

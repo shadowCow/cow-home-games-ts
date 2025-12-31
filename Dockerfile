@@ -36,6 +36,12 @@ COPY --from=builder /app/packages/server/dist ./packages/server/dist
 # Copy built client static assets
 COPY --from=builder /app/packages/client/dist ./packages/client/dist
 
+# Create data directory for persistent application data
+RUN mkdir -p /var/lib/cow-home-games-ts
+
+# Set up volume for persistent data
+VOLUME ["/var/lib/cow-home-games-ts"]
+
 # Expose server port
 EXPOSE 3000
 

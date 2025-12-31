@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -9,4 +9,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    volumes:
+      - /var/lib/cow-home-games-ts:/var/lib/cow-home-games-ts
     restart: unless-stopped

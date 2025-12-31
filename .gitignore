@@ -12,3 +12,6 @@ notes.md
 
 # environment files with secrets
 .env
+
+# docker override for local development
+docker-compose.override.yml

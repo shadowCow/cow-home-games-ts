@@ -2,9 +2,7 @@ version: "3.8"
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: raspberrypi.local:5000/cow-home-games-ts:latest
     ports:
       - "3000:3000"
     environment:

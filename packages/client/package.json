@@ -5,10 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "vite",
+    "dev:inmem": "VITE_USE_IN_MEMORY_SERVICES=true vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

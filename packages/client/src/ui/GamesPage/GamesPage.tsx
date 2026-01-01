@@ -22,12 +22,16 @@ export function GamesPage(props: {
   }, [props.gameService]);
 
   const handleConfirm = () => {
+    if (!selectedGame) return;
     console.log("Confirm button clicked with selected game:", selectedGame);
-    props.navigate({ type: "NavigateTo", view: "GameSessionBuilder" });
+    props.navigate({
+      type: "NavigateToGameSessionBuilder",
+      selectedGameName: selectedGame,
+    });
   };
 
   const handleBack = () => {
-    props.navigate({ type: "NavigateTo", view: "GameSessions" });
+    props.navigate({ type: "NavigateToGameSessions" });
   };
 
   return (

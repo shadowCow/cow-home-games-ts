@@ -1,17 +1,24 @@
 import { Dispatch } from "react";
+import { GameService } from "../../services/game/GameService";
 import { NavigationAction } from "../Navigator/navigationReducer";
 import { Button } from "../common/Button/Button";
 import styles from "./GameSessionBuilderPage.module.css";
 
 export function GameSessionBuilderPage(props: {
+  gameService: GameService;
+  selectedGameName: string;
   navigate: Dispatch<NavigationAction>;
 }) {
   const handleBack = () => {
-    props.navigate({ type: "NavigateTo", view: "Games" });
+    props.navigate({ type: "NavigateToGames" });
   };
 
-  const handleConfirm = () => {
-    console.log("Confirm button clicked");
+  const handleConfirm = async () => {
+    console.log("Creating game session for:", props.selectedGameName);
+    const sessionId = await props.gameService.createGameSession(
+      props.selectedGameName
+    );
+    props.navigate({ type: "NavigateToGameSession", sessionId });
   };
 
   return (

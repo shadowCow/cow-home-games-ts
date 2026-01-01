@@ -32,4 +32,22 @@ export class GameServiceInMemory implements GameService {
   async listGameSessions(): Promise<GameSession[]> {
     return this.sessions;
   }
+
+  async createGameSession(gameName: string): Promise<string> {
+    const id = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const session: GameSession = {
+      id,
+      game: { name: gameName },
+    };
+    this.sessions.push(session);
+    return id;
+  }
+
+  async getGameSession(id: string): Promise<GameSession> {
+    const session = this.sessions.find((s) => s.id === id);
+    if (!session) {
+      throw new Error(`Game session with id ${id} not found`);
+    }
+    return session;
+  }
 }

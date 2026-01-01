@@ -23,7 +23,7 @@ export function GameSessionsPage(props: {
   }, [props.gameService]);
 
   const handleCreate = () => {
-    props.navigate({ type: "NavigateTo", view: "Games" });
+    props.navigate({ type: "NavigateToGames" });
   };
 
   const handleJoin = () => {

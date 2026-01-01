@@ -3,6 +3,7 @@ import { GameService } from "../../services/game/GameService";
 import { GameSessionsPage } from "../GameSessionsPage/GameSessionsPage";
 import { GamesPage } from "../GamesPage/GamesPage";
 import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
+import { GameSessionPage } from "../GameSessionPage/GameSessionPage";
 import {
   navigationReducer,
   createInitialNavigationState,
@@ -17,7 +18,7 @@ export function Navigator(props: { gameService: GameService }) {
   );
 
   // Render the current view
-  switch (state.currentView) {
+  switch (state.currentView.kind) {
     case "GameSessions":
       return (
         <GameSessionsPage
@@ -28,7 +29,21 @@ export function Navigator(props: { gameService: GameService }) {
     case "Games":
       return <GamesPage gameService={props.gameService} navigate={dispatch} />;
     case "GameSessionBuilder":
-      return <GameSessionBuilderPage navigate={dispatch} />;
+      return (
+        <GameSessionBuilderPage
+          gameService={props.gameService}
+          selectedGameName={state.currentView.selectedGameName}
+          navigate={dispatch}
+        />
+      );
+    case "GameSession":
+      return (
+        <GameSessionPage
+          gameService={props.gameService}
+          sessionId={state.currentView.sessionId}
+          navigate={dispatch}
+        />
+      );
     default:
       return null;
   }

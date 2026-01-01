@@ -31,6 +31,10 @@ export function GameSessionsPage(props: {
     props.navigate({ type: "NavigateToGameSession", sessionId: joinCode });
   };
 
+  const handleJoinSession = (sessionId: string) => {
+    props.navigate({ type: "NavigateToGameSession", sessionId });
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.content}>
@@ -63,7 +67,10 @@ export function GameSessionsPage(props: {
             <ul className={styles.sessions}>
               {sessions.map((session) => (
                 <li key={session.id} className={styles.sessionItem}>
-                  {session.game.name}
+                  <span className={styles.gameName}>{session.game.name}</span>
+                  <Button onClick={() => handleJoinSession(session.id)}>
+                    Join
+                  </Button>
                 </li>
               ))}
             </ul>

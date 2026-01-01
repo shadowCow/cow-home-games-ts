@@ -69,10 +69,18 @@
 }
 
 .sessionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 1rem;
   background-color: var(--color-background);
   border-radius: 4px;
   border: 1px solid var(--color-border);
+  gap: 1rem;
+}
+
+.gameName {
   color: var(--color-text);
   font-weight: 500;
+  flex: 1;
 }

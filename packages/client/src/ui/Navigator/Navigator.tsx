@@ -2,6 +2,7 @@ import { useReducer, Dispatch } from "react";
 import { GameService } from "../../services/game/GameService";
 import { GameSessionsPage } from "../GameSessionsPage/GameSessionsPage";
 import { GamesPage } from "../GamesPage/GamesPage";
+import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
 import {
   navigationReducer,
   createInitialNavigationState,
@@ -26,6 +27,8 @@ export function Navigator(props: { gameService: GameService }) {
       );
     case "Games":
       return <GamesPage gameService={props.gameService} navigate={dispatch} />;
+    case "GameSessionBuilder":
+      return <GameSessionBuilderPage navigate={dispatch} />;
     default:
       return null;
   }

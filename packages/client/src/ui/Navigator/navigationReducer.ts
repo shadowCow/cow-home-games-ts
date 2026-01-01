@@ -1,5 +1,5 @@
 // Available views in the application
-export type View = "GameSessions" | "Games";
+export type View = "GameSessions" | "Games" | "GameSessionBuilder";
 
 // Navigation state
 export type NavigationState = {

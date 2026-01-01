@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { LoginPage } from "./LoginPage/LoginPage";
-import { Home } from "./Home/Home";
+import { GameSessionsPage } from "./GameSessionsPage/GameSessionsPage";
 import { AuthGateway } from "../services/auth/AuthGateway";
+import { GameService } from "../services/game/GameService";
 import { User } from "../services/auth/User";
 
-function App(props: { authGateway: AuthGateway }) {
+function App(props: { authGateway: AuthGateway; gameService: GameService }) {
   const [user, setUser] = useState<User | null>(null);
 
   const handleLoginSuccess = (loggedInUser: User) => {
@@ -25,7 +26,7 @@ function App(props: { authGateway: AuthGateway }) {
     );
   }
 
-  return <Home user={user} onLogout={handleLogout} />;
+  return <GameSessionsPage gameService={props.gameService} />;
 }
 
 export default App;

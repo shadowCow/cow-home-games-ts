@@ -3,3 +3,4 @@
 
 export * from './auth/authentication';
 export * from './common/validation';
+export * from './game/session';

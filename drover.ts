@@ -37,27 +37,16 @@ const build = graph
 graph.job("docker:run", [shell("docker compose up --build")]);
 
 // Docker registry jobs
-const dockerBuild = graph.job("docker:build", [
+const dockerBuildPi = graph.job("docker:build", [
   log(
     `Building Docker image for ARM64: ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}`
   ),
   shell(
-    `docker buildx build --platform linux/arm64 -t ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} --load .`
+    `docker buildx build --platform linux/arm64 -t ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} --push .`
   ),
 ]);
-
-const dockerPush = graph
-  .job("docker:push", [
-    log(
-      `Pushing image to registry: ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}`
-    ),
-    shell(
-      `docker push ${DOCKER_REGISTRY_HOST}/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}`
-    ),
-  ])
-  .dependsOn(dockerBuild);
 
 // Complete publish workflow
 graph
   .job("docker:publish", [log("Docker image published successfully!")])
-  .dependsOn(dockerPush);
+  .dependsOn(dockerBuildPi);

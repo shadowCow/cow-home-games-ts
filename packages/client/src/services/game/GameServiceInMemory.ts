@@ -10,20 +10,7 @@ export class GameServiceInMemory implements GameService {
     { name: "Backgammon" },
   ];
 
-  private sessions: GameSession[] = [
-    {
-      id: "session-1",
-      game: { name: "Chess" },
-    },
-    {
-      id: "session-2",
-      game: { name: "Checkers" },
-    },
-    {
-      id: "session-3",
-      game: { name: "Go" },
-    },
-  ];
+  private sessions: GameSession[] = [];
 
   async listGames(): Promise<Game[]> {
     return this.games;
@@ -34,7 +21,8 @@ export class GameServiceInMemory implements GameService {
   }
 
   async createGameSession(gameName: string): Promise<string> {
-    const id = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate a 6-digit code
+    const id = Math.floor(100000 + Math.random() * 900000).toString();
     const session: GameSession = {
       id,
       game: { name: gameName },

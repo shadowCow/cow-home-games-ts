@@ -27,7 +27,8 @@ export function GameSessionsPage(props: {
   };
 
   const handleJoin = () => {
-    console.log("Join button clicked with code:", joinCode);
+    if (!joinCode.trim()) return;
+    props.navigate({ type: "NavigateToGameSession", sessionId: joinCode });
   };
 
   return (

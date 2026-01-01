@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Dispatch } from "react";
 import { GameSession } from "@cow-sunday/protocol";
 import { GameService } from "../../services/game/GameService";
+import { NavigationAction } from "../Navigator/navigationReducer";
 import { TextField } from "../common/TextField/TextField";
 import { Button } from "../common/Button/Button";
 import styles from "./GameSessionsPage.module.css";
 
 export function GameSessionsPage(props: {
   gameService: GameService;
+  navigate: Dispatch<NavigationAction>;
 }) {
   const [joinCode, setJoinCode] = useState("");
   const [sessions, setSessions] = useState<GameSession[]>([]);
@@ -21,7 +23,7 @@ export function GameSessionsPage(props: {
   }, [props.gameService]);
 
   const handleCreate = () => {
-    console.log("Create button clicked");
+    props.navigate({ type: "NavigateTo", view: "Games" });
   };
 
   const handleJoin = () => {

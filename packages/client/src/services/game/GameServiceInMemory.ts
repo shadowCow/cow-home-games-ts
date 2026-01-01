@@ -1,7 +1,15 @@
 import { GameService } from "./GameService";
-import { GameSession } from "@cow-sunday/protocol";
+import { Game, GameSession } from "@cow-sunday/protocol";
 
 export class GameServiceInMemory implements GameService {
+  private games: Game[] = [
+    { name: "Chess" },
+    { name: "Checkers" },
+    { name: "Go" },
+    { name: "Poker" },
+    { name: "Backgammon" },
+  ];
+
   private sessions: GameSession[] = [
     {
       id: "session-1",
@@ -16,6 +24,10 @@ export class GameServiceInMemory implements GameService {
       game: { name: "Go" },
     },
   ];
+
+  async listGames(): Promise<Game[]> {
+    return this.games;
+  }
 
   async listGameSessions(): Promise<GameSession[]> {
     return this.sessions;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LoginPage } from "./LoginPage/LoginPage";
-import { GameSessionsPage } from "./GameSessionsPage/GameSessionsPage";
+import { Navigator } from "./Navigator/Navigator";
 import { AuthGateway } from "../services/auth/AuthGateway";
 import { GameService } from "../services/game/GameService";
 import { User } from "../services/auth/User";
@@ -26,7 +26,7 @@ function App(props: { authGateway: AuthGateway; gameService: GameService }) {
     );
   }
 
-  return <GameSessionsPage gameService={props.gameService} />;
+  return <Navigator gameService={props.gameService} />;
 }
 
 export default App;

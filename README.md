@@ -1,15 +1,5 @@
 # cow-home-games-ts
 
-# Running Docker Container
+## Documentation
 
-Once the image is published:
-
-- ssh into the deployment box
-- navigate to the repo
-- run `git pull`
-- run the following
-
-```shell
-docker compose pull
-docker compose up -d
-```
+- [Docker Deployment](docs/docker-deployment.md)

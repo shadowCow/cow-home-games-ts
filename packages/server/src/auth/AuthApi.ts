@@ -12,7 +12,7 @@ import { AuthGateway } from './AuthGateway';
 export function registerAuthRoutes(fastify: FastifyInstance, authGateway: AuthGateway) {
   fastify.post<{
     Body: LoginCommand;
-  }>('/api/auth/login', async (request, reply) => {
+  }>('/auth/login', async (request, reply) => {
     // Validate the command with Zod
     const result = LoginCommand.safeParse(request.body);
 
@@ -47,7 +47,7 @@ export function registerAuthRoutes(fastify: FastifyInstance, authGateway: AuthGa
 
   fastify.post<{
     Body: LogoutCommand;
-  }>('/api/auth/logout', async (request, reply) => {
+  }>('/auth/logout', async (request, reply) => {
     // Validate the command with Zod
     const result = LogoutCommand.safeParse(request.body);
 

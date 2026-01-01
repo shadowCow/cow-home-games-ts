@@ -28,7 +28,7 @@ export class AuthGatewayGameServer implements AuthGateway {
       password,
     };
 
-    const response = await fetch(`${this.baseUrl}/api/auth/login`, {
+    const response = await fetch(`${this.baseUrl}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -81,7 +81,7 @@ export class AuthGatewayGameServer implements AuthGateway {
       kind: "LogoutCommand",
     };
 
-    const response = await fetch(`${this.baseUrl}/api/auth/logout`, {
+    const response = await fetch(`${this.baseUrl}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

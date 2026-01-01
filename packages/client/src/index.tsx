@@ -8,13 +8,16 @@ import { AuthGatewayGameServer } from './services/auth/AuthGatewayGameServer';
 import { AuthGatewayInMemory } from './services/auth/AuthGatewayInMemory';
 import { GameService } from './services/game/GameService';
 import { GameServiceInMemory } from './services/game/GameServiceInMemory';
+import { GameServiceGameServer } from './services/game/GameServiceGameServer';
 
 // Wire up dependencies
 const authGateway: AuthGateway = config.useInMemoryServices
   ? new AuthGatewayInMemory()
   : new AuthGatewayGameServer();
 
-const gameService: GameService = new GameServiceInMemory();
+const gameService: GameService = config.useInMemoryServices
+  ? new GameServiceInMemory()
+  : new GameServiceGameServer();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

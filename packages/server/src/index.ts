@@ -8,6 +8,9 @@ import { registerAuthRoutes } from './auth/AuthApi';
 import { UserRepoFs } from './user-repo/UserRepoFs';
 import { UserRepoInMemory } from './user-repo/UserRepoInMemory';
 import { UserRepo } from './user-repo/UserRepo';
+import { GameRepoInMemory } from './game/GameRepoInMemory';
+import { GameSessionRepoInMemory } from './game/GameSessionRepoInMemory';
+import { registerGameRoutes } from './game/GameApi';
 import { config } from './config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,8 +31,14 @@ const userRepo: UserRepo = config.useInMemoryUsers
   : new UserRepoFs();
 const authGateway = new AuthGatewayJwt(fastify.jwt, userRepo);
 
+const gameRepo = new GameRepoInMemory();
+const gameSessionRepo = new GameSessionRepoInMemory();
+
 // Register auth routes
 registerAuthRoutes(fastify, authGateway);
+
+// Register game routes
+registerGameRoutes(fastify, gameRepo, gameSessionRepo);
 
 // API routes
 fastify.get('/api/hello', async () => {

@@ -23,10 +23,15 @@ const serverBuild = graph.job("server:build", [
   shell("npm run build", { cwd: "packages/server" }),
 ]);
 
+const protocolBuild = graph.job("protocol:build", [
+  clean("packages/protocol/dist"),
+  shell("npm run build", { cwd: "packages/protocol" }),
+]);
+
 // Define a job that builds everything
 const build = graph
   .job("build", [log("All packages built successfully!")])
-  .dependsOn(droverBuild, clientBuild, serverBuild);
+  .dependsOn(droverBuild, clientBuild, serverBuild, protocolBuild);
 
 // Define a job to run the Docker container
 graph.job("docker:run", [shell("docker compose up --build")]);

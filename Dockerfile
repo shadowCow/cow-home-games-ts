@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY packages/protocol/package*.json ./packages/protocol/
 COPY packages/client/package*.json ./packages/client/
 COPY packages/server/package*.json ./packages/server/
 
@@ -15,6 +16,8 @@ RUN npm install
 COPY . .
 
 # Build all packages using npm scripts
+# Build protocol first as it may be imported by client/server
+RUN npm run build -w @cow-sunday/protocol
 RUN npm run build -w @cow-sunday/server
 RUN npm run build -w @cow-sunday/client
 
@@ -28,7 +31,11 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY packages/protocol/package*.json ./packages/protocol/
 COPY packages/server/package*.json ./packages/server/
+
+# Copy built protocol (before npm install, as server depends on it)
+COPY --from=builder /app/packages/protocol/dist ./packages/protocol/dist
 
 # Install production dependencies only
 RUN npm install --workspace=@cow-sunday/server --omit=dev

@@ -1,5 +1,6 @@
 import { useReducer, Dispatch } from "react";
 import { GameService } from "../../services/game/GameService";
+import { GameRegistry } from "../../games/GameRegistry";
 import { GameSessionsPage } from "../GameSessionsPage/GameSessionsPage";
 import { GamesPage } from "../GamesPage/GamesPage";
 import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
@@ -10,7 +11,10 @@ import {
   NavigationAction,
 } from "./navigationReducer";
 
-export function Navigator(props: { gameService: GameService }) {
+export function Navigator(props: {
+  gameService: GameService;
+  gameRegistry: GameRegistry;
+}) {
   const [state, dispatch] = useReducer(
     navigationReducer,
     undefined,
@@ -41,6 +45,7 @@ export function Navigator(props: { gameService: GameService }) {
         <GameSessionPage
           gameService={props.gameService}
           sessionId={state.currentView.sessionId}
+          gameRegistry={props.gameRegistry}
           navigate={dispatch}
         />
       );

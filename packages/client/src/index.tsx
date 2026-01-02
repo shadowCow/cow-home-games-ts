@@ -9,6 +9,8 @@ import { AuthGatewayInMemory } from './services/auth/AuthGatewayInMemory';
 import { GameService } from './services/game/GameService';
 import { GameServiceInMemory } from './services/game/GameServiceInMemory';
 import { GameServiceGameServer } from './services/game/GameServiceGameServer';
+import { GameRegistry } from './games/GameRegistry';
+import { TicTacToe } from './games/TicTacToe/TicTacToe';
 
 // Wire up dependencies
 const authGateway: AuthGateway = config.useInMemoryServices
@@ -19,8 +21,17 @@ const gameService: GameService = config.useInMemoryServices
   ? new GameServiceInMemory()
   : new GameServiceGameServer();
 
+// Register available games
+const gameRegistry: GameRegistry = {
+  'Tic Tac Toe': TicTacToe,
+};
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App authGateway={authGateway} gameService={gameService} />
+    <App
+      authGateway={authGateway}
+      gameService={gameService}
+      gameRegistry={gameRegistry}
+    />
   </StrictMode>
 );

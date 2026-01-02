@@ -3,9 +3,14 @@ import { LoginPage } from "./LoginPage/LoginPage";
 import { Navigator } from "./Navigator/Navigator";
 import { AuthGateway } from "../services/auth/AuthGateway";
 import { GameService } from "../services/game/GameService";
+import { GameRegistry } from "../games/GameRegistry";
 import { User } from "../services/auth/User";
 
-function App(props: { authGateway: AuthGateway; gameService: GameService }) {
+function App(props: {
+  authGateway: AuthGateway;
+  gameService: GameService;
+  gameRegistry: GameRegistry;
+}) {
   const [user, setUser] = useState<User | null>(null);
 
   const handleLoginSuccess = (loggedInUser: User) => {
@@ -26,7 +31,12 @@ function App(props: { authGateway: AuthGateway; gameService: GameService }) {
     );
   }
 
-  return <Navigator gameService={props.gameService} />;
+  return (
+    <Navigator
+      gameService={props.gameService}
+      gameRegistry={props.gameRegistry}
+    />
+  );
 }
 
 export default App;

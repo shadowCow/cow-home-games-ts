@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // ========================================
 // Game Session Types
@@ -25,24 +25,26 @@ export type GameSession = z.infer<typeof GameSession>;
 
 // GameAction: Represents an action taken by a user in a game session
 export const GameAction = z.object({
-  kind: z.literal('GameAction'),
+  kind: z.literal("GameAction"),
   sessionId: z.string(),
   userId: z.string(),
+  action: z.record(z.string(), z.unknown()),
 });
 
 export type GameAction = z.infer<typeof GameAction>;
 
 // GameState: Represents the current state of a game session
 export const GameState = z.object({
-  kind: z.literal('GameState'),
+  kind: z.literal("GameState"),
   sessionId: z.string(),
+  state: z.record(z.string(), z.unknown()),
 });
 
 export type GameState = z.infer<typeof GameState>;
 
 // GameActionInvalid: Indicates that a game action was invalid
 export const GameActionInvalid = z.object({
-  kind: z.literal('GameActionInvalid'),
+  kind: z.literal("GameActionInvalid"),
   sessionId: z.string(),
   error: z.string(),
 });

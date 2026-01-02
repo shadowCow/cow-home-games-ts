@@ -3,11 +3,11 @@ import { Game, GameSession } from "@cow-sunday/protocol";
 
 export class GameServiceInMemory implements GameService {
   private games: Game[] = [
+    { name: "Tic Tac Toe" },
     { name: "Chess" },
     { name: "Checkers" },
     { name: "Go" },
     { name: "Poker" },
-    { name: "Backgammon" },
   ];
 
   private sessions: GameSession[] = [];

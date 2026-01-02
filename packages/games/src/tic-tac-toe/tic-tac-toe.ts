@@ -1,5 +1,6 @@
 import { Result, Ok, Err, err, ok } from "@cow-sunday/fp-ts";
-import { createFst, Fst } from "../fst/fst";
+import { createFst } from "../fst/fst";
+import { GameDefinition, GameError } from "../game-definition";
 
 // ========================================
 // Types
@@ -187,21 +188,58 @@ function applyEvent(
 }
 
 // ========================================
-// FST Factory
+// FST Instance
 // ========================================
 
-export function createTicTacToe(): Fst<
-  TicTacToeState,
-  TicTacToeCommand,
-  TicTacToeEvent,
-  TicTacToeError
-> {
-  const initialState: TicTacToeState = {
-    board: createEmptyBoard(),
-    currentPlayer: "X",
-    winner: null,
-    gameOver: false,
-  };
+const initialState: TicTacToeState = {
+  board: createEmptyBoard(),
+  currentPlayer: "X",
+  winner: null,
+  gameOver: false,
+};
 
-  return createFst(handleCommand, applyEvent, undefined, initialState);
+const fst = createFst(handleCommand, applyEvent, undefined, initialState);
+
+// ========================================
+// Game Definition
+// ========================================
+
+function isCommand(input: unknown): input is TicTacToeCommand {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "kind" in input &&
+    (input as any).kind === "PlaceMark" &&
+    "position" in input &&
+    "player" in input
+  );
 }
+
+export const ticTacToe: GameDefinition = {
+  name: "Tic Tac Toe",
+  description: "Classic 3x3 grid game where players alternate marking spaces",
+  playerRange: {
+    min: 2,
+    max: 2,
+  },
+  rules: (input: unknown): Result<unknown, GameError> => {
+    if (!isCommand(input)) {
+      return err({
+        kind: "GameError" as const,
+        message: "Input must be a valid TicTacToeCommand",
+      });
+    }
+
+    const result = fst.handleCommand(input);
+
+    if (result.kind === "Err") {
+      return err({
+        kind: "GameError" as const,
+        message: "Command failed",
+        data: result.value,
+      });
+    }
+
+    return ok(fst.getState());
+  },
+};

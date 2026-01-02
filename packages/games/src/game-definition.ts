@@ -1,3 +1,11 @@
+import { Result } from "@cow-sunday/fp-ts";
+
+export type GameError = {
+  kind: "GameError";
+  message: string;
+  data?: unknown;
+};
+
 export type GameDefinition = {
   name: string; // unique identifier for the game
   description: string; // short description of the game
@@ -5,5 +13,5 @@ export type GameDefinition = {
     min: number;
     max: number;
   };
-  rules: (input: unknown) => unknown; // game rules implementation
+  rules: (input: unknown) => Result<unknown, GameError>; // game rules implementation
 };

@@ -1,6 +1,7 @@
 import { Result, Ok, Err, err, ok } from "@cow-sunday/fp-ts";
-import { createFst } from "../fst/fst";
+
 import { GameDefinition, GameError } from "../game-definition";
+import { createFst } from "@cow-sunday/protocol";
 
 // ========================================
 // Types

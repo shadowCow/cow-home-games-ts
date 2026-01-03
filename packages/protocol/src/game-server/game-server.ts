@@ -5,7 +5,7 @@ import {
   RoomCollectionCommand,
   RoomCollectionEvent,
   RoomCollectionError,
-  RoomCollectionFst,
+  RoomCollectionFstLeader,
 } from "../room/room-collection";
 import { ValidationFailure } from "../common/validation";
 
@@ -38,7 +38,7 @@ export type GameServerResponse = RoomCollectionResponse;
 // ========================================
 
 export type GameServerState = {
-  rooms: RoomCollectionFst;
+  rooms: RoomCollectionFstLeader;
 };
 
 // ========================================

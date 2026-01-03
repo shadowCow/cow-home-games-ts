@@ -1,7 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, err } from "@cow-sunday/fp-ts";
-import { createFst } from "./fst";
+import { createFstLeader } from "./fst";
 import { createFstCollection } from "./fst-collection";
 import type { CollectionCommand, CollectionEvent, CollectionError } from "./fst-collection";
 
@@ -22,7 +22,7 @@ type CounterError = { kind: "NegativeResult" };
 // ========================================
 
 function createCounterFst(initialState: CounterState) {
-  return createFst<CounterState, CounterCommand, CounterEvent, CounterError, void>(
+  return createFstLeader<CounterState, CounterCommand, CounterEvent, CounterError, void>(
     (state, command) => {
       switch (command.kind) {
         case "Increment":

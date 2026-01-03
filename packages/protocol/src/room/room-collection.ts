@@ -7,7 +7,7 @@ import {
   CollectionEvent,
   CollectionError,
   CollectionState,
-  CollectionFst,
+  CollectionFstLeader,
 } from "../fst/fst-collection";
 import {
   createRoom,
@@ -60,16 +60,16 @@ export type RoomCollectionError = CollectionError<RoomError>;
 export type RoomCollectionState = CollectionState<RoomState, RoomCommand, RoomEvent, RoomError>;
 
 // ========================================
-// Room Collection FST Type
+// Room Collection FST Leader Type
 // ========================================
 
-export type RoomCollectionFst = CollectionFst<RoomState, RoomCommand, RoomEvent, RoomError>;
+export type RoomCollectionFstLeader = CollectionFstLeader<RoomState, RoomCommand, RoomEvent, RoomError>;
 
 // ========================================
 // Room Collection Factory
 // ========================================
 
-export function createRoomCollection(): RoomCollectionFst {
+export function createRoomCollection(): RoomCollectionFstLeader {
   return createFstCollection(ROOM_ENTITY_TYPE, (initialState) =>
     createRoom(initialState.owner, initialState.code)
   );

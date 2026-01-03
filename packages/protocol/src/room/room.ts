@@ -1,6 +1,6 @@
 import { ok, err } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { createFst, Fst } from "../fst/fst";
+import { createFstLeader, FstLeader } from "../fst/fst";
 
 // ========================================
 // Room State
@@ -238,7 +238,7 @@ export type RoomError = z.infer<typeof RoomError>;
 export function createRoom(
   ownerId: string,
   code: string
-): Fst<RoomState, RoomCommand, RoomEvent, RoomError> {
+): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
   const initialState: RoomState = {
     owner: ownerId,
     code: code,
@@ -246,7 +246,7 @@ export function createRoom(
     activeSession: { kind: "RoomNoSession" },
   };
 
-  return createFst<RoomState, RoomCommand, RoomEvent, RoomError, void>(
+  return createFstLeader<RoomState, RoomCommand, RoomEvent, RoomError, void>(
     (state, command) => {
       switch (command.kind) {
         case "JoinRoom": {

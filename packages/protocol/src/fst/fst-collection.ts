@@ -1,6 +1,6 @@
 import { Result, ok, err } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { Fst } from "./fst";
+import { FstLeader } from "./fst";
 
 // ========================================
 // Collection Commands
@@ -134,16 +134,16 @@ export type CollectionError<TEntityError> =
 
 // Collection state
 export type CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
-  entities: Record<string, Fst<TEntityState, TEntityCommand, TEntityEvent, TEntityError>>;
+  entities: Record<string, FstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError>>;
 };
 
 // Factory function to create entity FSTs
 export type EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = (
   initialState: TEntityState
-) => Fst<TEntityState, TEntityCommand, TEntityEvent, TEntityError>;
+) => FstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError>;
 
-// Collection FST type
-export type CollectionFst<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = Fst<
+// Collection FST Leader type
+export type CollectionFstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = FstLeader<
   CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError>,
   CollectionCommand<TEntityState, TEntityCommand>,
   CollectionEvent<TEntityState, TEntityEvent>,
@@ -153,7 +153,7 @@ export type CollectionFst<TEntityState, TEntityCommand, TEntityEvent, TEntityErr
 export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, TEntityError>(
   entityType: string,
   entityFactory: EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError>
-): CollectionFst<TEntityState, TEntityCommand, TEntityEvent, TEntityError> {
+): CollectionFstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError> {
   let state: CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
     entities: {},
   };

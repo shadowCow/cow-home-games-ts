@@ -36,6 +36,7 @@ export type RoomSessionState = z.infer<typeof RoomSessionState>;
 
 export const RoomState = z.object({
   owner: z.string(),
+  code: z.string(),
   guests: z.array(z.string()),
   activeSession: RoomSessionState,
 });
@@ -49,6 +50,7 @@ export type RoomState = z.infer<typeof RoomState>;
 export const JoinRoom = z.object({
   kind: z.literal("JoinRoom"),
   userId: z.string(),
+  code: z.string(),
 });
 
 export type JoinRoom = z.infer<typeof JoinRoom>;
@@ -91,6 +93,14 @@ export const ClearRoomSession = z.object({
 
 export type ClearRoomSession = z.infer<typeof ClearRoomSession>;
 
+export const ChangeRoomCode = z.object({
+  kind: z.literal("ChangeRoomCode"),
+  requesterId: z.string(),
+  newCode: z.string(),
+});
+
+export type ChangeRoomCode = z.infer<typeof ChangeRoomCode>;
+
 export const RoomCommand = z.discriminatedUnion("kind", [
   JoinRoom,
   LeaveRoom,
@@ -98,6 +108,7 @@ export const RoomCommand = z.discriminatedUnion("kind", [
   StartGameSession,
   StartGameSessionBuilder,
   ClearRoomSession,
+  ChangeRoomCode,
 ]);
 
 export type RoomCommand = z.infer<typeof RoomCommand>;
@@ -147,6 +158,13 @@ export const RoomSessionCleared = z.object({
 
 export type RoomSessionCleared = z.infer<typeof RoomSessionCleared>;
 
+export const RoomCodeChanged = z.object({
+  kind: z.literal("RoomCodeChanged"),
+  newCode: z.string(),
+});
+
+export type RoomCodeChanged = z.infer<typeof RoomCodeChanged>;
+
 export const RoomEvent = z.discriminatedUnion("kind", [
   GuestJoined,
   GuestLeft,
@@ -154,6 +172,7 @@ export const RoomEvent = z.discriminatedUnion("kind", [
   GameSessionStarted,
   GameSessionBuilderStarted,
   RoomSessionCleared,
+  RoomCodeChanged,
 ]);
 
 export type RoomEvent = z.infer<typeof RoomEvent>;
@@ -195,12 +214,19 @@ export const SessionAlreadyActive = z.object({
 
 export type SessionAlreadyActive = z.infer<typeof SessionAlreadyActive>;
 
+export const InvalidRoomCode = z.object({
+  kind: z.literal("InvalidRoomCode"),
+});
+
+export type InvalidRoomCode = z.infer<typeof InvalidRoomCode>;
+
 export const RoomError = z.discriminatedUnion("kind", [
   NotOwner,
   GuestAlreadyInRoom,
   GuestNotInRoom,
   OwnerCannotLeave,
   SessionAlreadyActive,
+  InvalidRoomCode,
 ]);
 
 export type RoomError = z.infer<typeof RoomError>;
@@ -209,9 +235,13 @@ export type RoomError = z.infer<typeof RoomError>;
 // Room FST Factory
 // ========================================
 
-export function createRoom(ownerId: string): Fst<RoomState, RoomCommand, RoomEvent, RoomError> {
+export function createRoom(
+  ownerId: string,
+  code: string
+): Fst<RoomState, RoomCommand, RoomEvent, RoomError> {
   const initialState: RoomState = {
     owner: ownerId,
+    code: code,
     guests: [],
     activeSession: { kind: "RoomNoSession" },
   };
@@ -220,6 +250,11 @@ export function createRoom(ownerId: string): Fst<RoomState, RoomCommand, RoomEve
     (state, command) => {
       switch (command.kind) {
         case "JoinRoom": {
+          // Check if code is valid
+          if (command.code !== state.code) {
+            return err({ kind: "InvalidRoomCode" });
+          }
+
           // Owner cannot join as guest
           if (command.userId === state.owner) {
             return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
@@ -297,6 +332,15 @@ export function createRoom(ownerId: string): Fst<RoomState, RoomCommand, RoomEve
 
           return ok({ kind: "RoomSessionCleared" });
         }
+
+        case "ChangeRoomCode": {
+          // Only owner can change code
+          if (command.requesterId !== state.owner) {
+            return err({ kind: "NotOwner", userId: command.requesterId });
+          }
+
+          return ok({ kind: "RoomCodeChanged", newCode: command.newCode });
+        }
       }
     },
     (state, event) => {
@@ -335,6 +379,12 @@ export function createRoom(ownerId: string): Fst<RoomState, RoomCommand, RoomEve
           return {
             ...state,
             activeSession: { kind: "RoomNoSession" },
+          };
+
+        case "RoomCodeChanged":
+          return {
+            ...state,
+            code: event.newCode,
           };
       }
     },

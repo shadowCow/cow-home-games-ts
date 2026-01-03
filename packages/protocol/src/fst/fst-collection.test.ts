@@ -1,7 +1,7 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, err } from "@cow-sunday/fp-ts";
-import { createFstLeader } from "./fst";
+import { createFstLeader, Snapshot } from "./fst";
 import { createFstCollection } from "./fst-collection";
 import type { CollectionCommand, CollectionEvent, CollectionError } from "./fst-collection";
 
@@ -21,7 +21,7 @@ type CounterError = { kind: "NegativeResult" };
 // Test Entity FST Factory
 // ========================================
 
-function createCounterFst(initialState: CounterState) {
+function createCounterFst(snapshot: Snapshot<CounterState>) {
   return createFstLeader<CounterState, CounterCommand, CounterEvent, CounterError, void>(
     (state, command) => {
       switch (command.kind) {
@@ -43,7 +43,7 @@ function createCounterFst(initialState: CounterState) {
       }
     },
     undefined,
-    initialState
+    snapshot
   );
 }
 
@@ -303,66 +303,4 @@ describe("FST Collection", () => {
     assert.deepEqual(state.entities["counter2"].getState(), { count: 7 });
   });
 
-  test("should apply events correctly", () => {
-    // Arrange
-    const collection = createFstCollection("Counter", createCounterFst);
-
-    // Act
-    collection.applyEvent({
-      index: 1,
-      event: {
-        kind: "EntityAdded",
-        entityType: "Counter",
-        id: "counter1",
-        initialState: { count: 0 },
-      },
-    });
-    collection.applyEvent({
-      index: 2,
-      event: {
-        kind: "EntityUpdated",
-        entityType: "Counter",
-        id: "counter1",
-        event: { index: 1, event: { kind: "Incremented", amount: 10 } },
-      },
-    });
-
-    // Assert
-    const state = collection.getState();
-    assert.deepEqual(state.entities["counter1"].getState(), { count: 10 });
-
-    // Act
-    collection.applyEvent({
-      index: 3,
-      event: {
-        kind: "EntityRemoved",
-        entityType: "Counter",
-        id: "counter1",
-      },
-    });
-
-    // Assert
-    const stateAfterRemove = collection.getState();
-    assert.equal(stateAfterRemove.entities["counter1"], undefined);
-  });
-
-  test("should handle applyEvent for non-existent entity gracefully", () => {
-    // Arrange
-    const collection = createFstCollection("Counter", createCounterFst);
-
-    // Act
-    collection.applyEvent({
-      index: 1,
-      event: {
-        kind: "EntityUpdated",
-        entityType: "Counter",
-        id: "nonexistent",
-        event: { index: 1, event: { kind: "Incremented", amount: 5 } },
-      },
-    });
-
-    // Assert
-    const state = collection.getState();
-    assert.deepEqual(state.entities, {});
-  });
 });

@@ -1,6 +1,6 @@
 import { ok, err } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { createFstLeader, FstLeader } from "../fst/fst";
+import { createFstLeader, FstLeader, Snapshot } from "../fst/fst";
 
 // ========================================
 // Room State
@@ -246,6 +246,11 @@ export function createRoom(
     activeSession: { kind: "RoomNoSession" },
   };
 
+  const initialSnapshot: Snapshot<RoomState> = {
+    state: initialState,
+    lastAppliedIndex: 0,
+  };
+
   return createFstLeader<RoomState, RoomCommand, RoomEvent, RoomError, void>(
     (state, command) => {
       switch (command.kind) {
@@ -389,6 +394,6 @@ export function createRoom(
       }
     },
     undefined,
-    initialState
+    initialSnapshot
   );
 }

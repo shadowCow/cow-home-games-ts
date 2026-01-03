@@ -1,6 +1,6 @@
 import { Result, ok, err } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { FstLeader, IndexedEvent, createFstLeader } from "./fst";
+import { FstLeader, IndexedEvent, Snapshot, createFstLeader } from "./fst";
 
 // ========================================
 // Collection Commands
@@ -144,7 +144,7 @@ export type CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityE
 
 // Factory function to create entity FSTs
 export type EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = (
-  initialState: TEntityState
+  snapshot: Snapshot<TEntityState>
 ) => FstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError>;
 
 // Collection FST Leader type
@@ -161,6 +161,11 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
 ): CollectionFstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError> {
   const initialState: CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
     entities: {},
+  };
+
+  const initialSnapshot = {
+    state: initialState,
+    lastAppliedIndex: 0,
   };
 
   return createFstLeader<
@@ -222,7 +227,7 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
             ...state,
             entities: {
               ...state.entities,
-              [event.id]: entityFactory(event.initialState),
+              [event.id]: entityFactory({ state: event.initialState, lastAppliedIndex: 0 }),
             },
           };
         }
@@ -236,19 +241,13 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
         }
 
         case "EntityUpdated": {
-          const entity = state.entities[event.id];
-          if (entity) {
-            // Only apply if entity hasn't already processed this event
-            // (entity.handleCommand applies events internally, so we check the index)
-            if (entity.getCurrentIndex() < event.event.index) {
-              entity.applyEvent(event.event);
-            }
-          }
+          // Entity has already applied the event via handleCommand
+          // This will be addressed separately later
           return state;
         }
       }
     },
     undefined,
-    initialState
+    initialSnapshot
   );
 }

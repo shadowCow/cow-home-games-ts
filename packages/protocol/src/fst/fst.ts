@@ -16,6 +16,17 @@ export type IndexedEvent<TEvent> = {
   event: TEvent;
 };
 
+export const Snapshot = <TState extends z.ZodTypeAny>(stateSchema: TState) =>
+  z.object({
+    state: stateSchema,
+    lastAppliedIndex: z.number(),
+  });
+
+export type Snapshot<TState> = {
+  state: TState;
+  lastAppliedIndex: number;
+};
+
 export type SyncError =
   | { kind: "DuplicateEvent"; receivedIndex: number; lastAppliedIndex: number }
   | { kind: "EventGap"; receivedIndex: number; expectedIndex: number }
@@ -28,8 +39,8 @@ export type SyncError =
 export type FstLeader<TState, TCommand, TEvent, TError> = {
   getState(): Readonly<TState>;
   getCurrentIndex(): number;
+  getSnapshot(): Snapshot<TState>;
   handleCommand(c: TCommand): Result<IndexedEvent<TEvent>, TError>;
-  applyEvent(e: IndexedEvent<TEvent>): void;
 };
 
 export type CommandHandler<TState, TCommand, TEvent, TError, TContext> = (
@@ -44,10 +55,19 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
   commandHandler: CommandHandler<TState, TCommand, TEvent, TError, TContext>,
   eventApplyer: EventApplyer<TState, TEvent>,
   ctx: TContext,
-  initialState: TState
+  snapshot: Snapshot<TState>
 ): FstLeader<TState, TCommand, TEvent, TError> {
-  let state = initialState;
-  let currentIndex = 0;
+  let state = snapshot.state;
+  let currentIndex = snapshot.lastAppliedIndex;
+
+  // Internal function to apply events (not exposed publicly)
+  const applyEvent = (e: IndexedEvent<TEvent>): void => {
+    state = eventApplyer(state, e.event);
+    // Update currentIndex to the event's index
+    if (e.index > currentIndex) {
+      currentIndex = e.index;
+    }
+  };
 
   return {
     getState: function (): Readonly<TState> {
@@ -56,6 +76,13 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
 
     getCurrentIndex: function (): number {
       return currentIndex;
+    },
+
+    getSnapshot: function (): Snapshot<TState> {
+      return {
+        state,
+        lastAppliedIndex: currentIndex,
+      };
     },
 
     handleCommand: function (c: TCommand): Result<IndexedEvent<TEvent>, TError> {
@@ -68,19 +95,11 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
           index: currentIndex,
           event: result.value,
         };
-        this.applyEvent(indexedEvent);
+        applyEvent(indexedEvent);
         return ok(indexedEvent);
       }
 
       return result;
-    },
-
-    applyEvent: function (e: IndexedEvent<TEvent>): void {
-      state = eventApplyer(state, e.event);
-      // Update currentIndex to the event's index
-      if (e.index > currentIndex) {
-        currentIndex = e.index;
-      }
     },
   };
 }
@@ -92,8 +111,9 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
 export type FstFollower<TState, TEvent> = {
   getState(): Readonly<TState>;
   getLastAppliedIndex(): number;
+  getSnapshot(): Snapshot<TState>;
   applyEvent(e: IndexedEvent<TEvent>): Result<void, SyncError>;
-  applySnapshot(s: TState, lastAppliedIndex: number): Result<void, SyncError>;
+  applySnapshot(snapshot: Snapshot<TState>): Result<void, SyncError>;
 };
 
 export function createFstFollower<TState, TEvent>(
@@ -110,6 +130,13 @@ export function createFstFollower<TState, TEvent>(
 
     getLastAppliedIndex: function (): number {
       return lastAppliedIndex;
+    },
+
+    getSnapshot: function (): Snapshot<TState> {
+      return {
+        state,
+        lastAppliedIndex,
+      };
     },
 
     applyEvent: function (e: IndexedEvent<TEvent>): Result<void, SyncError> {
@@ -137,18 +164,18 @@ export function createFstFollower<TState, TEvent>(
       return ok(undefined);
     },
 
-    applySnapshot: function (s: TState, snapshotIndex: number): Result<void, SyncError> {
+    applySnapshot: function (snapshot: Snapshot<TState>): Result<void, SyncError> {
       // Only apply if snapshot is more recent
-      if (snapshotIndex <= lastAppliedIndex) {
+      if (snapshot.lastAppliedIndex <= lastAppliedIndex) {
         return err({
           kind: "StaleSnapshot" as const,
-          snapshotIndex,
+          snapshotIndex: snapshot.lastAppliedIndex,
           lastAppliedIndex,
         });
       }
 
-      state = s;
-      lastAppliedIndex = snapshotIndex;
+      state = snapshot.state;
+      lastAppliedIndex = snapshot.lastAppliedIndex;
       return ok(undefined);
     },
   };

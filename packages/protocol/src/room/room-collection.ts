@@ -70,7 +70,7 @@ export type RoomCollectionFstLeader = CollectionFstLeader<RoomState, RoomCommand
 // ========================================
 
 export function createRoomCollection(): RoomCollectionFstLeader {
-  return createFstCollection(ROOM_ENTITY_TYPE, (initialState) =>
-    createRoom(initialState.owner, initialState.code)
+  return createFstCollection(ROOM_ENTITY_TYPE, (snapshot) =>
+    createRoom(snapshot.state.owner, snapshot.state.code)
   );
 }

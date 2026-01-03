@@ -142,15 +142,18 @@ export type EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntity
   initialState: TEntityState
 ) => Fst<TEntityState, TEntityCommand, TEntityEvent, TEntityError>;
 
-export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, TEntityError>(
-  entityType: string,
-  entityFactory: EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError>
-): Fst<
+// Collection FST type
+export type CollectionFst<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = Fst<
   CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError>,
   CollectionCommand<TEntityState, TEntityCommand>,
   CollectionEvent<TEntityState, TEntityEvent>,
   CollectionError<TEntityError>
-> {
+>;
+
+export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, TEntityError>(
+  entityType: string,
+  entityFactory: EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError>
+): CollectionFst<TEntityState, TEntityCommand, TEntityEvent, TEntityError> {
   let state: CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
     entities: {},
   };

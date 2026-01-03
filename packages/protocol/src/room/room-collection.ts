@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   createFstCollection,
   createCollectionCommandSchema,
@@ -8,15 +7,21 @@ import {
   CollectionEvent,
   CollectionError,
   CollectionState,
+  CollectionFst,
 } from "../fst/fst-collection";
 import {
   createRoom,
+  RoomState as RoomStateSchema,
+  RoomCommand as RoomCommandSchema,
+  RoomEvent as RoomEventSchema,
+  RoomError as RoomErrorSchema,
+} from "./room";
+import type {
   RoomState,
   RoomCommand,
   RoomEvent,
   RoomError,
 } from "./room";
-import { Fst } from "../fst/fst";
 
 // ========================================
 // Room Collection Constants
@@ -28,53 +33,43 @@ export const ROOM_ENTITY_TYPE = "Room";
 // Room Collection Command Schema
 // ========================================
 
-export const RoomCollectionCommand = createCollectionCommandSchema(RoomState, RoomCommand);
+export const RoomCollectionCommand = createCollectionCommandSchema(RoomStateSchema, RoomCommandSchema);
 
-export type RoomCollectionCommand = CollectionCommand<
-  z.infer<typeof RoomState>,
-  z.infer<typeof RoomCommand>
->;
+export type RoomCollectionCommand = CollectionCommand<RoomState, RoomCommand>;
 
 // ========================================
 // Room Collection Event Schema
 // ========================================
 
-export const RoomCollectionEvent = createCollectionEventSchema(RoomState, RoomEvent);
+export const RoomCollectionEvent = createCollectionEventSchema(RoomStateSchema, RoomEventSchema);
 
-export type RoomCollectionEvent = CollectionEvent<
-  z.infer<typeof RoomState>,
-  z.infer<typeof RoomEvent>
->;
+export type RoomCollectionEvent = CollectionEvent<RoomState, RoomEvent>;
 
 // ========================================
 // Room Collection Error Schema
 // ========================================
 
-export const RoomCollectionError = createCollectionErrorSchema(RoomError);
+export const RoomCollectionError = createCollectionErrorSchema(RoomErrorSchema);
 
-export type RoomCollectionError = CollectionError<z.infer<typeof RoomError>>;
+export type RoomCollectionError = CollectionError<RoomError>;
 
 // ========================================
 // Room Collection State Type
 // ========================================
 
-export type RoomCollectionState = CollectionState<
-  z.infer<typeof RoomState>,
-  z.infer<typeof RoomCommand>,
-  z.infer<typeof RoomEvent>,
-  z.infer<typeof RoomError>
->;
+export type RoomCollectionState = CollectionState<RoomState, RoomCommand, RoomEvent, RoomError>;
+
+// ========================================
+// Room Collection FST Type
+// ========================================
+
+export type RoomCollectionFst = CollectionFst<RoomState, RoomCommand, RoomEvent, RoomError>;
 
 // ========================================
 // Room Collection Factory
 // ========================================
 
-export function createRoomCollection(): Fst<
-  RoomCollectionState,
-  RoomCollectionCommand,
-  RoomCollectionEvent,
-  RoomCollectionError
-> {
+export function createRoomCollection(): RoomCollectionFst {
   return createFstCollection(ROOM_ENTITY_TYPE, (initialState) =>
     createRoom(initialState.owner, initialState.code)
   );

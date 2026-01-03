@@ -1,6 +1,6 @@
 import { Result, ok, err } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { FstLeader } from "./fst";
+import { FstLeader, IndexedEvent, createFstLeader } from "./fst";
 
 // ========================================
 // Collection Commands
@@ -69,7 +69,7 @@ export const EntityUpdated = <TEntityEvent extends z.ZodTypeAny>(entityEventSche
     kind: z.literal("EntityUpdated"),
     entityType: z.string(),
     id: z.string(),
-    event: entityEventSchema,
+    event: IndexedEvent(entityEventSchema),
   });
 
 export const createCollectionEventSchema = <
@@ -88,7 +88,12 @@ export const createCollectionEventSchema = <
 export type CollectionEvent<TEntityState, TEntityEvent> =
   | z.infer<ReturnType<typeof EntityAdded<z.ZodType<TEntityState>>>>
   | z.infer<typeof EntityRemoved>
-  | z.infer<ReturnType<typeof EntityUpdated<z.ZodType<TEntityEvent>>>>;
+  | {
+      kind: "EntityUpdated";
+      entityType: string;
+      id: string;
+      event: IndexedEvent<TEntityEvent>;
+    };
 
 // ========================================
 // Collection Errors
@@ -154,59 +159,55 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
   entityType: string,
   entityFactory: EntityFstFactory<TEntityState, TEntityCommand, TEntityEvent, TEntityError>
 ): CollectionFstLeader<TEntityState, TEntityCommand, TEntityEvent, TEntityError> {
-  let state: CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
+  const initialState: CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError> = {
     entities: {},
   };
 
-  return {
-    getState(): Readonly<CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError>> {
-      return state;
-    },
-
-    handleCommand(
-      command: CollectionCommand<TEntityState, TEntityCommand>
-    ): Result<CollectionEvent<TEntityState, TEntityEvent>, CollectionError<TEntityError>> {
+  return createFstLeader<
+    CollectionState<TEntityState, TEntityCommand, TEntityEvent, TEntityError>,
+    CollectionCommand<TEntityState, TEntityCommand>,
+    CollectionEvent<TEntityState, TEntityEvent>,
+    CollectionError<TEntityError>,
+    void
+  >(
+    (state, command) => {
       switch (command.kind) {
         case "AddEntity": {
           if (state.entities[command.id]) {
-            return err({ kind: "EntityAlreadyExists", entityType, id: command.id });
+            return err({ kind: "EntityAlreadyExists" as const, entityType, id: command.id });
           }
-          const event: CollectionEvent<TEntityState, TEntityEvent> = {
-            kind: "EntityAdded",
+          return ok({
+            kind: "EntityAdded" as const,
             entityType,
             id: command.id,
             initialState: command.initialState,
-          };
-          this.applyEvent(event);
-          return ok(event);
+          });
         }
 
         case "RemoveEntity": {
           if (!state.entities[command.id]) {
-            return err({ kind: "EntityNotFound", entityType, id: command.id });
+            return err({ kind: "EntityNotFound" as const, entityType, id: command.id });
           }
-          const event: CollectionEvent<TEntityState, TEntityEvent> = {
-            kind: "EntityRemoved",
+          return ok({
+            kind: "EntityRemoved" as const,
             entityType,
             id: command.id,
-          };
-          this.applyEvent(event);
-          return ok(event);
+          });
         }
 
         case "UpdateEntity": {
           const entity = state.entities[command.id];
           if (!entity) {
-            return err({ kind: "EntityNotFound", entityType, id: command.id });
+            return err({ kind: "EntityNotFound" as const, entityType, id: command.id });
           }
 
           const result = entity.handleCommand(command.command);
           if (result.kind === "Err") {
-            return err({ kind: "EntityError", entityType, id: command.id, error: result.value });
+            return err({ kind: "EntityError" as const, entityType, id: command.id, error: result.value });
           }
 
           return ok({
-            kind: "EntityUpdated",
+            kind: "EntityUpdated" as const,
             entityType,
             id: command.id,
             event: result.value,
@@ -214,27 +215,40 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
         }
       }
     },
-
-    applyEvent(event: CollectionEvent<TEntityState, TEntityEvent>): void {
+    (state, event) => {
       switch (event.kind) {
         case "EntityAdded": {
-          state.entities[event.id] = entityFactory(event.initialState);
-          break;
+          return {
+            ...state,
+            entities: {
+              ...state.entities,
+              [event.id]: entityFactory(event.initialState),
+            },
+          };
         }
 
         case "EntityRemoved": {
-          delete state.entities[event.id];
-          break;
+          const { [event.id]: removed, ...rest } = state.entities;
+          return {
+            ...state,
+            entities: rest,
+          };
         }
 
         case "EntityUpdated": {
           const entity = state.entities[event.id];
           if (entity) {
-            entity.applyEvent(event.event);
+            // Only apply if entity hasn't already processed this event
+            // (entity.handleCommand applies events internally, so we check the index)
+            if (entity.getCurrentIndex() < event.event.index) {
+              entity.applyEvent(event.event);
+            }
           }
-          break;
+          return state;
         }
       }
     },
-  };
+    undefined,
+    initialState
+  );
 }

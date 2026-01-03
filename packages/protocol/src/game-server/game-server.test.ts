@@ -29,9 +29,9 @@ describe("Game Server", () => {
     if (response.kind === "RoomCollectionResponse") {
       assert.equal(response.result.kind, "Ok");
       if (response.result.kind === "Ok") {
-        assert.equal(response.result.value.kind, "EntityAdded");
-        assert.equal(response.result.value.entityType, "Room");
-        assert.equal(response.result.value.id, "room1");
+        assert.equal(response.result.value.event.kind, "EntityAdded");
+        assert.equal(response.result.value.event.entityType, "Room");
+        assert.equal(response.result.value.event.id, "room1");
       }
     }
 
@@ -77,13 +77,13 @@ describe("Game Server", () => {
     if (response.kind === "RoomCollectionResponse") {
       assert.equal(response.result.kind, "Ok");
       if (response.result.kind === "Ok") {
-        assert.equal(response.result.value.kind, "EntityUpdated");
-        assert.equal(response.result.value.entityType, "Room");
-        assert.equal(response.result.value.id, "room1");
-        if (response.result.value.kind === "EntityUpdated") {
-          assert.equal(response.result.value.event.kind, "GuestJoined");
-          if (response.result.value.event.kind === "GuestJoined") {
-            assert.equal(response.result.value.event.userId, "user2");
+        assert.equal(response.result.value.event.kind, "EntityUpdated");
+        assert.equal(response.result.value.event.entityType, "Room");
+        assert.equal(response.result.value.event.id, "room1");
+        if (response.result.value.event.kind === "EntityUpdated") {
+          assert.equal(response.result.value.event.event.event.kind, "GuestJoined");
+          if (response.result.value.event.event.event.kind === "GuestJoined") {
+            assert.equal(response.result.value.event.event.event.userId, "user2");
           }
         }
       }
@@ -128,9 +128,9 @@ describe("Game Server", () => {
     if (response.kind === "RoomCollectionResponse") {
       assert.equal(response.result.kind, "Ok");
       if (response.result.kind === "Ok") {
-        assert.equal(response.result.value.kind, "EntityRemoved");
-        assert.equal(response.result.value.entityType, "Room");
-        assert.equal(response.result.value.id, "room1");
+        assert.equal(response.result.value.event.kind, "EntityRemoved");
+        assert.equal(response.result.value.event.entityType, "Room");
+        assert.equal(response.result.value.event.id, "room1");
       }
     }
 

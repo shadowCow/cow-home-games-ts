@@ -40,9 +40,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "GuestJoined");
-        if (result.value.kind === "GuestJoined") {
-          assert.equal(result.value.userId, "guest1");
+        assert.equal(result.value.event.kind, "GuestJoined");
+        if (result.value.event.kind === "GuestJoined") {
+          assert.equal(result.value.event.userId, "guest1");
         }
       }
 
@@ -134,9 +134,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "GuestLeft");
-        if (result.value.kind === "GuestLeft") {
-          assert.equal(result.value.userId, "guest1");
+        assert.equal(result.value.event.kind, "GuestLeft");
+        if (result.value.event.kind === "GuestLeft") {
+          assert.equal(result.value.event.userId, "guest1");
         }
       }
 
@@ -195,9 +195,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "GuestRemoved");
-        if (result.value.kind === "GuestRemoved") {
-          assert.equal(result.value.guestId, "guest1");
+        assert.equal(result.value.event.kind, "GuestRemoved");
+        if (result.value.event.kind === "GuestRemoved") {
+          assert.equal(result.value.event.guestId, "guest1");
         }
       }
 
@@ -267,9 +267,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "GameSessionStarted");
-        if (result.value.kind === "GameSessionStarted") {
-          assert.equal(result.value.sessionId, "session456");
+        assert.equal(result.value.event.kind, "GameSessionStarted");
+        if (result.value.event.kind === "GameSessionStarted") {
+          assert.equal(result.value.event.sessionId, "session456");
         }
       }
 
@@ -343,9 +343,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "GameSessionBuilderStarted");
-        if (result.value.kind === "GameSessionBuilderStarted") {
-          assert.equal(result.value.builderId, "builder789");
+        assert.equal(result.value.event.kind, "GameSessionBuilderStarted");
+        if (result.value.event.kind === "GameSessionBuilderStarted") {
+          assert.equal(result.value.event.builderId, "builder789");
         }
       }
 
@@ -423,7 +423,7 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "RoomSessionCleared");
+        assert.equal(result.value.event.kind, "RoomSessionCleared");
       }
 
       const state = room.getState();
@@ -448,7 +448,7 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "RoomSessionCleared");
+        assert.equal(result.value.event.kind, "RoomSessionCleared");
       }
 
       const state = room.getState();
@@ -495,7 +495,7 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "RoomSessionCleared");
+        assert.equal(result.value.event.kind, "RoomSessionCleared");
       }
 
       const state = room.getState();
@@ -519,9 +519,9 @@ describe("Room", () => {
       // Assert
       assert.equal(result.kind, "Ok");
       if (result.kind === "Ok") {
-        assert.equal(result.value.kind, "RoomCodeChanged");
-        if (result.value.kind === "RoomCodeChanged") {
-          assert.equal(result.value.newCode, newCode);
+        assert.equal(result.value.event.kind, "RoomCodeChanged");
+        if (result.value.event.kind === "RoomCodeChanged") {
+          assert.equal(result.value.event.newCode, newCode);
         }
       }
 
@@ -593,8 +593,8 @@ describe("Room", () => {
       const room = createRoom("owner123", VALID_CODE);
 
       // Act
-      room.applyEvent({ kind: "GuestJoined", userId: "guest1" });
-      room.applyEvent({ kind: "GuestJoined", userId: "guest2" });
+      room.applyEvent({ index: 1, event: { kind: "GuestJoined", userId: "guest1" } });
+      room.applyEvent({ index: 2, event: { kind: "GuestJoined", userId: "guest2" } });
 
       // Assert
       const state = room.getState();
@@ -604,11 +604,11 @@ describe("Room", () => {
     test("should apply GuestLeft event", () => {
       // Arrange
       const room = createRoom("owner123", VALID_CODE);
-      room.applyEvent({ kind: "GuestJoined", userId: "guest1" });
-      room.applyEvent({ kind: "GuestJoined", userId: "guest2" });
+      room.applyEvent({ index: 1, event: { kind: "GuestJoined", userId: "guest1" } });
+      room.applyEvent({ index: 2, event: { kind: "GuestJoined", userId: "guest2" } });
 
       // Act
-      room.applyEvent({ kind: "GuestLeft", userId: "guest1" });
+      room.applyEvent({ index: 3, event: { kind: "GuestLeft", userId: "guest1" } });
 
       // Assert
       const state = room.getState();
@@ -618,11 +618,11 @@ describe("Room", () => {
     test("should apply GuestRemoved event", () => {
       // Arrange
       const room = createRoom("owner123", VALID_CODE);
-      room.applyEvent({ kind: "GuestJoined", userId: "guest1" });
-      room.applyEvent({ kind: "GuestJoined", userId: "guest2" });
+      room.applyEvent({ index: 1, event: { kind: "GuestJoined", userId: "guest1" } });
+      room.applyEvent({ index: 2, event: { kind: "GuestJoined", userId: "guest2" } });
 
       // Act
-      room.applyEvent({ kind: "GuestRemoved", guestId: "guest1" });
+      room.applyEvent({ index: 3, event: { kind: "GuestRemoved", guestId: "guest1" } });
 
       // Assert
       const state = room.getState();
@@ -634,7 +634,7 @@ describe("Room", () => {
       const room = createRoom("owner123", VALID_CODE);
 
       // Act
-      room.applyEvent({ kind: "GameSessionStarted", sessionId: "session456" });
+      room.applyEvent({ index: 1, event: { kind: "GameSessionStarted", sessionId: "session456" } });
 
       // Assert
       const state = room.getState();
@@ -649,7 +649,7 @@ describe("Room", () => {
       const room = createRoom("owner123", VALID_CODE);
 
       // Act
-      room.applyEvent({ kind: "GameSessionBuilderStarted", builderId: "builder789" });
+      room.applyEvent({ index: 1, event: { kind: "GameSessionBuilderStarted", builderId: "builder789" } });
 
       // Assert
       const state = room.getState();
@@ -662,10 +662,10 @@ describe("Room", () => {
     test("should apply RoomSessionCleared event", () => {
       // Arrange
       const room = createRoom("owner123", VALID_CODE);
-      room.applyEvent({ kind: "GameSessionStarted", sessionId: "session456" });
+      room.applyEvent({ index: 1, event: { kind: "GameSessionStarted", sessionId: "session456" } });
 
       // Act
-      room.applyEvent({ kind: "RoomSessionCleared" });
+      room.applyEvent({ index: 2, event: { kind: "RoomSessionCleared" } });
 
       // Assert
       const state = room.getState();
@@ -678,7 +678,7 @@ describe("Room", () => {
       const newCode = "new-code-789";
 
       // Act
-      room.applyEvent({ kind: "RoomCodeChanged", newCode: newCode });
+      room.applyEvent({ index: 1, event: { kind: "RoomCodeChanged", newCode: newCode } });
 
       // Assert
       const state = room.getState();

@@ -8,6 +8,7 @@ import {
   RoomCollectionFstLeader,
 } from "../room/room-collection";
 import { ValidationFailure } from "../common/validation";
+import { IndexedEvent } from "../fst/fst";
 
 // ========================================
 // Game Server Message Schema
@@ -28,7 +29,7 @@ export type GameServerMessage = z.infer<typeof GameServerMessage>;
 
 export type RoomCollectionResponse = {
   kind: "RoomCollectionResponse";
-  result: Result<RoomCollectionEvent, RoomCollectionError>;
+  result: Result<IndexedEvent<RoomCollectionEvent>, RoomCollectionError>;
 };
 
 export type GameServerResponse = RoomCollectionResponse;

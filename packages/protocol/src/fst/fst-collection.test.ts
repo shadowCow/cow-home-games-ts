@@ -79,9 +79,10 @@ describe("FST Collection", () => {
     // Assert
     assert.equal(result.kind, "Ok");
     if (result.kind === "Ok") {
-      assert.equal(result.value.kind, "EntityAdded");
-      assert.equal(result.value.entityType, "Counter");
-      assert.equal(result.value.id, "counter1");
+      assert.equal(result.value.index, 1);
+      assert.equal(result.value.event.kind, "EntityAdded");
+      assert.equal(result.value.event.entityType, "Counter");
+      assert.equal(result.value.event.id, "counter1");
     }
 
     const state = collection.getState();
@@ -139,9 +140,9 @@ describe("FST Collection", () => {
     // Assert
     assert.equal(result.kind, "Ok");
     if (result.kind === "Ok") {
-      assert.equal(result.value.kind, "EntityRemoved");
-      assert.equal(result.value.entityType, "Counter");
-      assert.equal(result.value.id, "counter1");
+      assert.equal(result.value.event.kind, "EntityRemoved");
+      assert.equal(result.value.event.entityType, "Counter");
+      assert.equal(result.value.event.id, "counter1");
     }
 
     const state = collection.getState();
@@ -192,14 +193,14 @@ describe("FST Collection", () => {
     // Assert
     assert.equal(result.kind, "Ok");
     if (result.kind === "Ok") {
-      const event: CollectionEvent<CounterState, CounterEvent> = result.value;
+      const event = result.value.event;
       assert.equal(event.kind, "EntityUpdated");
       if (event.kind === "EntityUpdated") {
         assert.equal(event.entityType, "Counter");
         assert.equal(event.id, "counter1");
-        assert.equal(event.event.kind, "Incremented");
-        if (event.event.kind === "Incremented") {
-          assert.equal(event.event.amount, 3);
+        assert.equal(event.event.event.kind, "Incremented");
+        if (event.event.event.kind === "Incremented") {
+          assert.equal(event.event.event.amount, 3);
         }
       }
     }
@@ -308,16 +309,22 @@ describe("FST Collection", () => {
 
     // Act
     collection.applyEvent({
-      kind: "EntityAdded",
-      entityType: "Counter",
-      id: "counter1",
-      initialState: { count: 0 },
+      index: 1,
+      event: {
+        kind: "EntityAdded",
+        entityType: "Counter",
+        id: "counter1",
+        initialState: { count: 0 },
+      },
     });
     collection.applyEvent({
-      kind: "EntityUpdated",
-      entityType: "Counter",
-      id: "counter1",
-      event: { kind: "Incremented", amount: 10 },
+      index: 2,
+      event: {
+        kind: "EntityUpdated",
+        entityType: "Counter",
+        id: "counter1",
+        event: { index: 1, event: { kind: "Incremented", amount: 10 } },
+      },
     });
 
     // Assert
@@ -326,9 +333,12 @@ describe("FST Collection", () => {
 
     // Act
     collection.applyEvent({
-      kind: "EntityRemoved",
-      entityType: "Counter",
-      id: "counter1",
+      index: 3,
+      event: {
+        kind: "EntityRemoved",
+        entityType: "Counter",
+        id: "counter1",
+      },
     });
 
     // Assert
@@ -342,10 +352,13 @@ describe("FST Collection", () => {
 
     // Act
     collection.applyEvent({
-      kind: "EntityUpdated",
-      entityType: "Counter",
-      id: "nonexistent",
-      event: { kind: "Incremented", amount: 5 },
+      index: 1,
+      event: {
+        kind: "EntityUpdated",
+        entityType: "Counter",
+        id: "nonexistent",
+        event: { index: 1, event: { kind: "Incremented", amount: 5 } },
+      },
     });
 
     // Assert

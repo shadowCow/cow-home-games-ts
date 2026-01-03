@@ -1,4 +1,25 @@
-import { Result } from "@cow-sunday/fp-ts";
+import { Result, ok, err } from "@cow-sunday/fp-ts";
+import { z } from "zod";
+
+// ========================================
+// Event Sourcing Types
+// ========================================
+
+export const IndexedEvent = <TEvent extends z.ZodTypeAny>(eventSchema: TEvent) =>
+  z.object({
+    index: z.number(),
+    event: eventSchema,
+  });
+
+export type IndexedEvent<TEvent> = {
+  index: number;
+  event: TEvent;
+};
+
+export type SyncError =
+  | { kind: "DuplicateEvent"; receivedIndex: number; lastAppliedIndex: number }
+  | { kind: "EventGap"; receivedIndex: number; expectedIndex: number }
+  | { kind: "StaleSnapshot"; snapshotIndex: number; lastAppliedIndex: number };
 
 // ========================================
 // FST Leader
@@ -6,8 +27,9 @@ import { Result } from "@cow-sunday/fp-ts";
 
 export type FstLeader<TState, TCommand, TEvent, TError> = {
   getState(): Readonly<TState>;
-  handleCommand(c: TCommand): Result<TEvent, TError>;
-  applyEvent(e: TEvent): void;
+  getCurrentIndex(): number;
+  handleCommand(c: TCommand): Result<IndexedEvent<TEvent>, TError>;
+  applyEvent(e: IndexedEvent<TEvent>): void;
 };
 
 export type CommandHandler<TState, TCommand, TEvent, TError, TContext> = (
@@ -25,22 +47,40 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
   initialState: TState
 ): FstLeader<TState, TCommand, TEvent, TError> {
   let state = initialState;
+  let currentIndex = 0;
 
   return {
     getState: function (): Readonly<TState> {
       return state;
     },
-    handleCommand: function (c: TCommand): Result<TEvent, TError> {
+
+    getCurrentIndex: function (): number {
+      return currentIndex;
+    },
+
+    handleCommand: function (c: TCommand): Result<IndexedEvent<TEvent>, TError> {
       const result = commandHandler(state, c, ctx);
 
       if (result.kind === "Ok") {
-        this.applyEvent(result.value);
+        // Increment index and create indexed event
+        currentIndex++;
+        const indexedEvent: IndexedEvent<TEvent> = {
+          index: currentIndex,
+          event: result.value,
+        };
+        this.applyEvent(indexedEvent);
+        return ok(indexedEvent);
       }
 
       return result;
     },
-    applyEvent: function (e: TEvent): void {
-      state = eventApplyer(state, e);
+
+    applyEvent: function (e: IndexedEvent<TEvent>): void {
+      state = eventApplyer(state, e.event);
+      // Update currentIndex to the event's index
+      if (e.index > currentIndex) {
+        currentIndex = e.index;
+      }
     },
   };
 }
@@ -51,8 +91,9 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
 
 export type FstFollower<TState, TEvent> = {
   getState(): Readonly<TState>;
-  applyEvent(e: TEvent): void;
-  setState(s: TState): void;
+  getLastAppliedIndex(): number;
+  applyEvent(e: IndexedEvent<TEvent>): Result<void, SyncError>;
+  applySnapshot(s: TState, lastAppliedIndex: number): Result<void, SyncError>;
 };
 
 export function createFstFollower<TState, TEvent>(
@@ -60,16 +101,55 @@ export function createFstFollower<TState, TEvent>(
   initialState: TState
 ): FstFollower<TState, TEvent> {
   let state = initialState;
+  let lastAppliedIndex = 0;
 
   return {
     getState: function (): Readonly<TState> {
       return state;
     },
-    applyEvent: function (e: TEvent): void {
-      state = eventApplyer(state, e);
+
+    getLastAppliedIndex: function (): number {
+      return lastAppliedIndex;
     },
-    setState: function (s: TState): void {
+
+    applyEvent: function (e: IndexedEvent<TEvent>): Result<void, SyncError> {
+      // Check for duplicate event
+      if (e.index <= lastAppliedIndex) {
+        return err({
+          kind: "DuplicateEvent" as const,
+          receivedIndex: e.index,
+          lastAppliedIndex,
+        });
+      }
+
+      // Check for gap in event log
+      if (e.index > lastAppliedIndex + 1) {
+        return err({
+          kind: "EventGap" as const,
+          receivedIndex: e.index,
+          expectedIndex: lastAppliedIndex + 1,
+        });
+      }
+
+      // Apply the event payload
+      state = eventApplyer(state, e.event);
+      lastAppliedIndex = e.index;
+      return ok(undefined);
+    },
+
+    applySnapshot: function (s: TState, snapshotIndex: number): Result<void, SyncError> {
+      // Only apply if snapshot is more recent
+      if (snapshotIndex <= lastAppliedIndex) {
+        return err({
+          kind: "StaleSnapshot" as const,
+          snapshotIndex,
+          lastAppliedIndex,
+        });
+      }
+
       state = s;
+      lastAppliedIndex = snapshotIndex;
+      return ok(undefined);
     },
   };
 }

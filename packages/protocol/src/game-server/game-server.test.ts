@@ -138,7 +138,7 @@ describe("Game Server", () => {
     assert.equal(state.rooms.getState().entities["room1"], undefined);
   });
 
-  test("should return ValidationError for invalid message", () => {
+  test("should return ValidationFailure for invalid message", () => {
     // Arrange
     const server = createGameServer();
     const invalidMessage = {
@@ -150,14 +150,13 @@ describe("Game Server", () => {
     const response = server.handleMessage(invalidMessage);
 
     // Assert
-    assert.equal(response.kind, "ValidationError");
-    if (response.kind === "ValidationError") {
-      assert.ok(response.errors);
-      assert.ok(response.errors.issues.length > 0);
+    assert.equal(response.kind, "ValidationFailure");
+    if (response.kind === "ValidationFailure") {
+      assert.ok(response.message);
     }
   });
 
-  test("should return ValidationError for message with missing fields", () => {
+  test("should return ValidationFailure for message with missing fields", () => {
     // Arrange
     const server = createGameServer();
     const invalidMessage = {
@@ -169,10 +168,9 @@ describe("Game Server", () => {
     const response = server.handleMessage(invalidMessage);
 
     // Assert
-    assert.equal(response.kind, "ValidationError");
-    if (response.kind === "ValidationError") {
-      assert.ok(response.errors);
-      assert.ok(response.errors.issues.length > 0);
+    assert.equal(response.kind, "ValidationFailure");
+    if (response.kind === "ValidationFailure") {
+      assert.ok(response.message);
     }
   });
 

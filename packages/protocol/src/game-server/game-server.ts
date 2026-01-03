@@ -7,6 +7,7 @@ import {
   RoomCollectionError,
   RoomCollectionFst,
 } from "../room/room-collection";
+import { ValidationFailure } from "../common/validation";
 
 // ========================================
 // Game Server Message Schema
@@ -33,15 +34,6 @@ export type RoomCollectionResponse = {
 export type GameServerResponse = RoomCollectionResponse;
 
 // ========================================
-// Game Server Validation Error
-// ========================================
-
-export type ValidationError = {
-  kind: "ValidationError";
-  errors: z.ZodError;
-};
-
-// ========================================
 // Game Server State
 // ========================================
 
@@ -54,7 +46,7 @@ export type GameServerState = {
 // ========================================
 
 export type GameServer = {
-  handleMessage(message: any): ValidationError | GameServerResponse;
+  handleMessage(message: any): ValidationFailure | GameServerResponse;
   getState(): Readonly<GameServerState>;
 };
 
@@ -66,14 +58,14 @@ export function createGameServer(): GameServer {
   };
 
   return {
-    handleMessage(message: any): ValidationError | GameServerResponse {
+    handleMessage(message: any): ValidationFailure | GameServerResponse {
       // Validate message with Zod
       const parseResult = GameServerMessage.safeParse(message);
 
       if (!parseResult.success) {
         return {
-          kind: "ValidationError",
-          errors: parseResult.error,
+          kind: "ValidationFailure",
+          message: parseResult.error.message,
         };
       }
 

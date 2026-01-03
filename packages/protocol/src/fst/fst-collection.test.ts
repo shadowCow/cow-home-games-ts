@@ -54,7 +54,7 @@ function createCounterFst(initialState: CounterState) {
 describe("FST Collection", () => {
   test("should start with empty collection", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
 
     // Act
     const state = collection.getState();
@@ -65,9 +65,10 @@ describe("FST Collection", () => {
 
   test("should add entity to collection", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     const command: CollectionCommand<CounterState, CounterCommand> = {
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 0 },
     };
@@ -79,6 +80,7 @@ describe("FST Collection", () => {
     assert.equal(result.kind, "Ok");
     if (result.kind === "Ok") {
       assert.equal(result.value.kind, "EntityAdded");
+      assert.equal(result.value.entityType, "Counter");
       assert.equal(result.value.id, "counter1");
     }
 
@@ -89,9 +91,10 @@ describe("FST Collection", () => {
 
   test("should return error when adding entity with duplicate ID", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 0 },
     });
@@ -99,6 +102,7 @@ describe("FST Collection", () => {
     // Act
     const result = collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 5 },
     });
@@ -109,6 +113,7 @@ describe("FST Collection", () => {
       const error: CollectionError<CounterError> = result.value;
       assert.equal(error.kind, "EntityAlreadyExists");
       if (error.kind === "EntityAlreadyExists") {
+        assert.equal(error.entityType, "Counter");
         assert.equal(error.id, "counter1");
       }
     }
@@ -116,9 +121,10 @@ describe("FST Collection", () => {
 
   test("should remove entity from collection", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 10 },
     });
@@ -126,6 +132,7 @@ describe("FST Collection", () => {
     // Act
     const result = collection.handleCommand({
       kind: "RemoveEntity",
+      entityType: "Counter",
       id: "counter1",
     });
 
@@ -133,6 +140,7 @@ describe("FST Collection", () => {
     assert.equal(result.kind, "Ok");
     if (result.kind === "Ok") {
       assert.equal(result.value.kind, "EntityRemoved");
+      assert.equal(result.value.entityType, "Counter");
       assert.equal(result.value.id, "counter1");
     }
 
@@ -142,11 +150,12 @@ describe("FST Collection", () => {
 
   test("should return error when removing non-existent entity", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
 
     // Act
     const result = collection.handleCommand({
       kind: "RemoveEntity",
+      entityType: "Counter",
       id: "nonexistent",
     });
 
@@ -156,6 +165,7 @@ describe("FST Collection", () => {
       const error: CollectionError<CounterError> = result.value;
       assert.equal(error.kind, "EntityNotFound");
       if (error.kind === "EntityNotFound") {
+        assert.equal(error.entityType, "Counter");
         assert.equal(error.id, "nonexistent");
       }
     }
@@ -163,9 +173,10 @@ describe("FST Collection", () => {
 
   test("should update entity with valid command", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 5 },
     });
@@ -173,6 +184,7 @@ describe("FST Collection", () => {
     // Act
     const result = collection.handleCommand({
       kind: "UpdateEntity",
+      entityType: "Counter",
       id: "counter1",
       command: { kind: "Increment", amount: 3 },
     });
@@ -183,6 +195,7 @@ describe("FST Collection", () => {
       const event: CollectionEvent<CounterState, CounterEvent> = result.value;
       assert.equal(event.kind, "EntityUpdated");
       if (event.kind === "EntityUpdated") {
+        assert.equal(event.entityType, "Counter");
         assert.equal(event.id, "counter1");
         assert.equal(event.event.kind, "Incremented");
         if (event.event.kind === "Incremented") {
@@ -197,11 +210,12 @@ describe("FST Collection", () => {
 
   test("should return error when updating non-existent entity", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
 
     // Act
     const result = collection.handleCommand({
       kind: "UpdateEntity",
+      entityType: "Counter",
       id: "nonexistent",
       command: { kind: "Increment", amount: 1 },
     });
@@ -212,6 +226,7 @@ describe("FST Collection", () => {
       const error: CollectionError<CounterError> = result.value;
       assert.equal(error.kind, "EntityNotFound");
       if (error.kind === "EntityNotFound") {
+        assert.equal(error.entityType, "Counter");
         assert.equal(error.id, "nonexistent");
       }
     }
@@ -219,9 +234,10 @@ describe("FST Collection", () => {
 
   test("should return entity error when entity command fails", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 2 },
     });
@@ -229,6 +245,7 @@ describe("FST Collection", () => {
     // Act
     const result = collection.handleCommand({
       kind: "UpdateEntity",
+      entityType: "Counter",
       id: "counter1",
       command: { kind: "Decrement", amount: 5 },
     });
@@ -239,6 +256,7 @@ describe("FST Collection", () => {
       const error: CollectionError<CounterError> = result.value;
       assert.equal(error.kind, "EntityError");
       if (error.kind === "EntityError") {
+        assert.equal(error.entityType, "Counter");
         assert.equal(error.id, "counter1");
         assert.equal(error.error.kind, "NegativeResult");
       }
@@ -250,14 +268,16 @@ describe("FST Collection", () => {
 
   test("should manage multiple entities independently", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 0 },
     });
     collection.handleCommand({
       kind: "AddEntity",
+      entityType: "Counter",
       id: "counter2",
       initialState: { count: 10 },
     });
@@ -265,11 +285,13 @@ describe("FST Collection", () => {
     // Act
     collection.handleCommand({
       kind: "UpdateEntity",
+      entityType: "Counter",
       id: "counter1",
       command: { kind: "Increment", amount: 5 },
     });
     collection.handleCommand({
       kind: "UpdateEntity",
+      entityType: "Counter",
       id: "counter2",
       command: { kind: "Decrement", amount: 3 },
     });
@@ -282,16 +304,18 @@ describe("FST Collection", () => {
 
   test("should apply events correctly", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
 
     // Act
     collection.applyEvent({
       kind: "EntityAdded",
+      entityType: "Counter",
       id: "counter1",
       initialState: { count: 0 },
     });
     collection.applyEvent({
       kind: "EntityUpdated",
+      entityType: "Counter",
       id: "counter1",
       event: { kind: "Incremented", amount: 10 },
     });
@@ -303,6 +327,7 @@ describe("FST Collection", () => {
     // Act
     collection.applyEvent({
       kind: "EntityRemoved",
+      entityType: "Counter",
       id: "counter1",
     });
 
@@ -313,11 +338,12 @@ describe("FST Collection", () => {
 
   test("should handle applyEvent for non-existent entity gracefully", () => {
     // Arrange
-    const collection = createFstCollection(createCounterFst);
+    const collection = createFstCollection("Counter", createCounterFst);
 
     // Act
     collection.applyEvent({
       kind: "EntityUpdated",
+      entityType: "Counter",
       id: "nonexistent",
       event: { kind: "Incremented", amount: 5 },
     });

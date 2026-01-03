@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { ok, err } from "@cow-sunday/fp-ts";
 import { createFstLeader, Snapshot } from "./fst";
 import { createFstCollection } from "./fst-collection";
-import type { CollectionCommand, CollectionEvent, CollectionError } from "./fst-collection";
+import type { CollectionCommand, CollectionError } from "./fst-collection";
 
 // ========================================
 // Test Entity Types

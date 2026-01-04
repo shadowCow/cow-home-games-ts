@@ -1,4 +1,4 @@
-import { ok, err } from "@cow-sunday/fp-ts";
+import { ok, err, Result } from "@cow-sunday/fp-ts";
 import { z } from "zod";
 import { createFstLeader, FstLeader, Snapshot } from "../fst/fst";
 
@@ -42,6 +42,22 @@ export const RoomState = z.object({
 });
 
 export type RoomState = z.infer<typeof RoomState>;
+
+function createInitialRoomState(ownerId: string, code: string): RoomState {
+  return {
+    owner: ownerId,
+    code: code,
+    guests: [],
+    activeSession: { kind: "RoomNoSession" },
+  };
+}
+
+function createInitialRoomSnapshot(ownerId: string, code: string): Snapshot<RoomState> {
+  return {
+    state: createInitialRoomState(ownerId, code),
+    lastAppliedIndex: 0,
+  };
+}
 
 // ========================================
 // Room Commands
@@ -246,6 +262,160 @@ export const RoomError = z.discriminatedUnion("kind", [
 export type RoomError = z.infer<typeof RoomError>;
 
 // ========================================
+// Room FST Command Handler
+// ========================================
+
+function handleRoomCommand(
+  state: RoomState,
+  command: RoomCommand
+): Result<RoomEvent, RoomError> {
+  switch (command.kind) {
+    case "JoinRoom": {
+      // Check if code is valid
+      if (command.code !== state.code) {
+        return err({ kind: "InvalidRoomCode" });
+      }
+
+      // Owner cannot join as guest
+      if (command.userId === state.owner) {
+        return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
+      }
+
+      // Check if already in room
+      if (state.guests.includes(command.userId)) {
+        return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
+      }
+
+      return ok({ kind: "GuestJoined", roomId: command.roomId, userId: command.userId });
+    }
+
+    case "LeaveRoom": {
+      // Owner cannot leave
+      if (command.userId === state.owner) {
+        return err({ kind: "OwnerCannotLeave" });
+      }
+
+      // Check if user is in room
+      if (!state.guests.includes(command.userId)) {
+        return err({ kind: "GuestNotInRoom", userId: command.userId });
+      }
+
+      return ok({ kind: "GuestLeft", roomId: command.roomId, userId: command.userId });
+    }
+
+    case "RemoveGuest": {
+      // Only owner can remove guests
+      if (command.requesterId !== state.owner) {
+        return err({ kind: "NotOwner", userId: command.requesterId });
+      }
+
+      // Check if guest is in room
+      if (!state.guests.includes(command.guestId)) {
+        return err({ kind: "GuestNotInRoom", userId: command.guestId });
+      }
+
+      return ok({ kind: "GuestRemoved", roomId: command.roomId, guestId: command.guestId });
+    }
+
+    case "StartGameSession": {
+      // Only owner can start sessions
+      if (command.requesterId !== state.owner) {
+        return err({ kind: "NotOwner", userId: command.requesterId });
+      }
+
+      // Cannot start if session already active
+      if (state.activeSession.kind !== "RoomNoSession") {
+        return err({ kind: "SessionAlreadyActive" });
+      }
+
+      return ok({ kind: "GameSessionStarted", roomId: command.roomId, sessionId: command.sessionId });
+    }
+
+    case "StartGameSessionBuilder": {
+      // Only owner can start builders
+      if (command.requesterId !== state.owner) {
+        return err({ kind: "NotOwner", userId: command.requesterId });
+      }
+
+      // Cannot start if session already active
+      if (state.activeSession.kind !== "RoomNoSession") {
+        return err({ kind: "SessionAlreadyActive" });
+      }
+
+      return ok({ kind: "GameSessionBuilderStarted", roomId: command.roomId, builderId: command.builderId });
+    }
+
+    case "ClearRoomSession": {
+      // Only owner can clear session
+      if (command.requesterId !== state.owner) {
+        return err({ kind: "NotOwner", userId: command.requesterId });
+      }
+
+      return ok({ kind: "RoomSessionCleared", roomId: command.roomId });
+    }
+
+    case "ChangeRoomCode": {
+      // Only owner can change code
+      if (command.requesterId !== state.owner) {
+        return err({ kind: "NotOwner", userId: command.requesterId });
+      }
+
+      return ok({ kind: "RoomCodeChanged", roomId: command.roomId, newCode: command.newCode });
+    }
+  }
+}
+
+// ========================================
+// Room FST Event Applyer
+// ========================================
+
+function applyRoomEvent(state: RoomState, event: RoomEvent): RoomState {
+  switch (event.kind) {
+    case "GuestJoined":
+      return {
+        ...state,
+        guests: [...state.guests, event.userId],
+      };
+
+    case "GuestLeft":
+      return {
+        ...state,
+        guests: state.guests.filter((id) => id !== event.userId),
+      };
+
+    case "GuestRemoved":
+      return {
+        ...state,
+        guests: state.guests.filter((id) => id !== event.guestId),
+      };
+
+    case "GameSessionStarted":
+      return {
+        ...state,
+        activeSession: { kind: "RoomSession", sessionId: event.sessionId },
+      };
+
+    case "GameSessionBuilderStarted":
+      return {
+        ...state,
+        activeSession: { kind: "RoomSessionBuilder", builderId: event.builderId },
+      };
+
+    case "RoomSessionCleared":
+      return {
+        ...state,
+        activeSession: { kind: "RoomNoSession" },
+      };
+
+    case "RoomCodeChanged":
+      return {
+        ...state,
+        code: event.newCode,
+      };
+  }
+}
+
+// ========================================
 // Room FST Factory
 // ========================================
 
@@ -253,161 +423,10 @@ export function createRoom(
   ownerId: string,
   code: string
 ): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
-  const initialState: RoomState = {
-    owner: ownerId,
-    code: code,
-    guests: [],
-    activeSession: { kind: "RoomNoSession" },
-  };
-
-  const initialSnapshot: Snapshot<RoomState> = {
-    state: initialState,
-    lastAppliedIndex: 0,
-  };
-
   return createFstLeader<RoomState, RoomCommand, RoomEvent, RoomError, void>(
-    (state, command) => {
-      switch (command.kind) {
-        case "JoinRoom": {
-          // Check if code is valid
-          if (command.code !== state.code) {
-            return err({ kind: "InvalidRoomCode" });
-          }
-
-          // Owner cannot join as guest
-          if (command.userId === state.owner) {
-            return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
-          }
-
-          // Check if already in room
-          if (state.guests.includes(command.userId)) {
-            return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
-          }
-
-          return ok({ kind: "GuestJoined", roomId: command.roomId, userId: command.userId });
-        }
-
-        case "LeaveRoom": {
-          // Owner cannot leave
-          if (command.userId === state.owner) {
-            return err({ kind: "OwnerCannotLeave" });
-          }
-
-          // Check if user is in room
-          if (!state.guests.includes(command.userId)) {
-            return err({ kind: "GuestNotInRoom", userId: command.userId });
-          }
-
-          return ok({ kind: "GuestLeft", roomId: command.roomId, userId: command.userId });
-        }
-
-        case "RemoveGuest": {
-          // Only owner can remove guests
-          if (command.requesterId !== state.owner) {
-            return err({ kind: "NotOwner", userId: command.requesterId });
-          }
-
-          // Check if guest is in room
-          if (!state.guests.includes(command.guestId)) {
-            return err({ kind: "GuestNotInRoom", userId: command.guestId });
-          }
-
-          return ok({ kind: "GuestRemoved", roomId: command.roomId, guestId: command.guestId });
-        }
-
-        case "StartGameSession": {
-          // Only owner can start sessions
-          if (command.requesterId !== state.owner) {
-            return err({ kind: "NotOwner", userId: command.requesterId });
-          }
-
-          // Cannot start if session already active
-          if (state.activeSession.kind !== "RoomNoSession") {
-            return err({ kind: "SessionAlreadyActive" });
-          }
-
-          return ok({ kind: "GameSessionStarted", roomId: command.roomId, sessionId: command.sessionId });
-        }
-
-        case "StartGameSessionBuilder": {
-          // Only owner can start builders
-          if (command.requesterId !== state.owner) {
-            return err({ kind: "NotOwner", userId: command.requesterId });
-          }
-
-          // Cannot start if session already active
-          if (state.activeSession.kind !== "RoomNoSession") {
-            return err({ kind: "SessionAlreadyActive" });
-          }
-
-          return ok({ kind: "GameSessionBuilderStarted", roomId: command.roomId, builderId: command.builderId });
-        }
-
-        case "ClearRoomSession": {
-          // Only owner can clear session
-          if (command.requesterId !== state.owner) {
-            return err({ kind: "NotOwner", userId: command.requesterId });
-          }
-
-          return ok({ kind: "RoomSessionCleared", roomId: command.roomId });
-        }
-
-        case "ChangeRoomCode": {
-          // Only owner can change code
-          if (command.requesterId !== state.owner) {
-            return err({ kind: "NotOwner", userId: command.requesterId });
-          }
-
-          return ok({ kind: "RoomCodeChanged", roomId: command.roomId, newCode: command.newCode });
-        }
-      }
-    },
-    (state, event) => {
-      switch (event.kind) {
-        case "GuestJoined":
-          return {
-            ...state,
-            guests: [...state.guests, event.userId],
-          };
-
-        case "GuestLeft":
-          return {
-            ...state,
-            guests: state.guests.filter((id) => id !== event.userId),
-          };
-
-        case "GuestRemoved":
-          return {
-            ...state,
-            guests: state.guests.filter((id) => id !== event.guestId),
-          };
-
-        case "GameSessionStarted":
-          return {
-            ...state,
-            activeSession: { kind: "RoomSession", sessionId: event.sessionId },
-          };
-
-        case "GameSessionBuilderStarted":
-          return {
-            ...state,
-            activeSession: { kind: "RoomSessionBuilder", builderId: event.builderId },
-          };
-
-        case "RoomSessionCleared":
-          return {
-            ...state,
-            activeSession: { kind: "RoomNoSession" },
-          };
-
-        case "RoomCodeChanged":
-          return {
-            ...state,
-            code: event.newCode,
-          };
-      }
-    },
+    handleRoomCommand,
+    applyRoomEvent,
     undefined,
-    initialSnapshot
+    createInitialRoomSnapshot(ownerId, code)
   );
 }

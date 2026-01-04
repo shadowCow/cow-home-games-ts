@@ -66,6 +66,7 @@ describe("Game Server", () => {
         id: "room1",
         command: {
           kind: "JoinRoom",
+          roomId: "room1",
           userId: "user2",
           code: "ABC123",
         },
@@ -224,6 +225,7 @@ describe("Game Server", () => {
         id: "nonexistent",
         command: {
           kind: "JoinRoom",
+          roomId: "nonexistent",
           userId: "user1",
           code: "ABC123",
         },
@@ -271,6 +273,7 @@ describe("Game Server", () => {
         id: "room1",
         command: {
           kind: "JoinRoom",
+          roomId: "room1",
           userId: "user2",
           code: "WRONG",
         },

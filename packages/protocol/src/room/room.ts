@@ -49,6 +49,7 @@ export type RoomState = z.infer<typeof RoomState>;
 
 export const JoinRoom = z.object({
   kind: z.literal("JoinRoom"),
+  roomId: z.string(),
   userId: z.string(),
   code: z.string(),
 });
@@ -57,6 +58,7 @@ export type JoinRoom = z.infer<typeof JoinRoom>;
 
 export const LeaveRoom = z.object({
   kind: z.literal("LeaveRoom"),
+  roomId: z.string(),
   userId: z.string(),
 });
 
@@ -64,6 +66,7 @@ export type LeaveRoom = z.infer<typeof LeaveRoom>;
 
 export const RemoveGuest = z.object({
   kind: z.literal("RemoveGuest"),
+  roomId: z.string(),
   requesterId: z.string(),
   guestId: z.string(),
 });
@@ -72,6 +75,7 @@ export type RemoveGuest = z.infer<typeof RemoveGuest>;
 
 export const StartGameSession = z.object({
   kind: z.literal("StartGameSession"),
+  roomId: z.string(),
   requesterId: z.string(),
   sessionId: z.string(),
 });
@@ -80,6 +84,7 @@ export type StartGameSession = z.infer<typeof StartGameSession>;
 
 export const StartGameSessionBuilder = z.object({
   kind: z.literal("StartGameSessionBuilder"),
+  roomId: z.string(),
   requesterId: z.string(),
   builderId: z.string(),
 });
@@ -88,6 +93,7 @@ export type StartGameSessionBuilder = z.infer<typeof StartGameSessionBuilder>;
 
 export const ClearRoomSession = z.object({
   kind: z.literal("ClearRoomSession"),
+  roomId: z.string(),
   requesterId: z.string(),
 });
 
@@ -95,6 +101,7 @@ export type ClearRoomSession = z.infer<typeof ClearRoomSession>;
 
 export const ChangeRoomCode = z.object({
   kind: z.literal("ChangeRoomCode"),
+  roomId: z.string(),
   requesterId: z.string(),
   newCode: z.string(),
 });
@@ -119,6 +126,7 @@ export type RoomCommand = z.infer<typeof RoomCommand>;
 
 export const GuestJoined = z.object({
   kind: z.literal("GuestJoined"),
+  roomId: z.string(),
   userId: z.string(),
 });
 
@@ -126,6 +134,7 @@ export type GuestJoined = z.infer<typeof GuestJoined>;
 
 export const GuestLeft = z.object({
   kind: z.literal("GuestLeft"),
+  roomId: z.string(),
   userId: z.string(),
 });
 
@@ -133,6 +142,7 @@ export type GuestLeft = z.infer<typeof GuestLeft>;
 
 export const GuestRemoved = z.object({
   kind: z.literal("GuestRemoved"),
+  roomId: z.string(),
   guestId: z.string(),
 });
 
@@ -140,6 +150,7 @@ export type GuestRemoved = z.infer<typeof GuestRemoved>;
 
 export const GameSessionStarted = z.object({
   kind: z.literal("GameSessionStarted"),
+  roomId: z.string(),
   sessionId: z.string(),
 });
 
@@ -147,6 +158,7 @@ export type GameSessionStarted = z.infer<typeof GameSessionStarted>;
 
 export const GameSessionBuilderStarted = z.object({
   kind: z.literal("GameSessionBuilderStarted"),
+  roomId: z.string(),
   builderId: z.string(),
 });
 
@@ -154,12 +166,14 @@ export type GameSessionBuilderStarted = z.infer<typeof GameSessionBuilderStarted
 
 export const RoomSessionCleared = z.object({
   kind: z.literal("RoomSessionCleared"),
+  roomId: z.string(),
 });
 
 export type RoomSessionCleared = z.infer<typeof RoomSessionCleared>;
 
 export const RoomCodeChanged = z.object({
   kind: z.literal("RoomCodeChanged"),
+  roomId: z.string(),
   newCode: z.string(),
 });
 
@@ -270,7 +284,7 @@ export function createRoom(
             return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
           }
 
-          return ok({ kind: "GuestJoined", userId: command.userId });
+          return ok({ kind: "GuestJoined", roomId: command.roomId, userId: command.userId });
         }
 
         case "LeaveRoom": {
@@ -284,7 +298,7 @@ export function createRoom(
             return err({ kind: "GuestNotInRoom", userId: command.userId });
           }
 
-          return ok({ kind: "GuestLeft", userId: command.userId });
+          return ok({ kind: "GuestLeft", roomId: command.roomId, userId: command.userId });
         }
 
         case "RemoveGuest": {
@@ -298,7 +312,7 @@ export function createRoom(
             return err({ kind: "GuestNotInRoom", userId: command.guestId });
           }
 
-          return ok({ kind: "GuestRemoved", guestId: command.guestId });
+          return ok({ kind: "GuestRemoved", roomId: command.roomId, guestId: command.guestId });
         }
 
         case "StartGameSession": {
@@ -312,7 +326,7 @@ export function createRoom(
             return err({ kind: "SessionAlreadyActive" });
           }
 
-          return ok({ kind: "GameSessionStarted", sessionId: command.sessionId });
+          return ok({ kind: "GameSessionStarted", roomId: command.roomId, sessionId: command.sessionId });
         }
 
         case "StartGameSessionBuilder": {
@@ -326,7 +340,7 @@ export function createRoom(
             return err({ kind: "SessionAlreadyActive" });
           }
 
-          return ok({ kind: "GameSessionBuilderStarted", builderId: command.builderId });
+          return ok({ kind: "GameSessionBuilderStarted", roomId: command.roomId, builderId: command.builderId });
         }
 
         case "ClearRoomSession": {
@@ -335,7 +349,7 @@ export function createRoom(
             return err({ kind: "NotOwner", userId: command.requesterId });
           }
 
-          return ok({ kind: "RoomSessionCleared" });
+          return ok({ kind: "RoomSessionCleared", roomId: command.roomId });
         }
 
         case "ChangeRoomCode": {
@@ -344,7 +358,7 @@ export function createRoom(
             return err({ kind: "NotOwner", userId: command.requesterId });
           }
 
-          return ok({ kind: "RoomCodeChanged", newCode: command.newCode });
+          return ok({ kind: "RoomCodeChanged", roomId: command.roomId, newCode: command.newCode });
         }
       }
     },

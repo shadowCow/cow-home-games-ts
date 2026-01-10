@@ -7,3 +7,4 @@ export * from "./game/session";
 export * from "./fst/fst";
 export * from "./game-client/game-client";
 export * from "./game-server/game-server";
+export * from "./room/rooms-projection";

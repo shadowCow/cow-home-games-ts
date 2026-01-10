@@ -1,6 +1,6 @@
 import { ok, err, Result } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { createFstLeader, FstLeader, Snapshot } from "../fst/fst";
+import { createFstLeader, createFstFollower, FstLeader, FstFollower, Snapshot } from "../fst/fst";
 
 // ========================================
 // Room State
@@ -416,10 +416,10 @@ function applyRoomEvent(state: RoomState, event: RoomEvent): RoomState {
 }
 
 // ========================================
-// Room FST Factory
+// Room FST Factories
 // ========================================
 
-export function createRoom(
+export function createRoomLeader(
   ownerId: string,
   code: string
 ): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
@@ -429,4 +429,10 @@ export function createRoom(
     undefined,
     createInitialRoomSnapshot(ownerId, code)
   );
+}
+
+export function createRoomFollower(
+  initialState: RoomState
+): FstFollower<RoomState, RoomEvent> {
+  return createFstFollower<RoomState, RoomEvent>(applyRoomEvent, initialState);
 }

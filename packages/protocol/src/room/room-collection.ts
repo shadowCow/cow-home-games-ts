@@ -10,7 +10,13 @@ import {
   CollectionFstLeader,
 } from "../fst/fst-collection";
 import {
-  createRoom,
+  createFstCollectionFollower,
+  CollectionFollowerState,
+  CollectionFstFollower,
+} from "../fst/fst-collection-follower";
+import {
+  createRoomLeader,
+  createRoomFollower,
   RoomState as RoomStateSchema,
   RoomCommand as RoomCommandSchema,
   RoomEvent as RoomEventSchema,
@@ -54,23 +60,31 @@ export const RoomCollectionError = createCollectionErrorSchema(RoomErrorSchema);
 export type RoomCollectionError = CollectionError<RoomError>;
 
 // ========================================
-// Room Collection State Type
+// Room Collection State Types
 // ========================================
 
 export type RoomCollectionState = CollectionState<RoomState, RoomCommand, RoomEvent, RoomError>;
 
+export type RoomCollectionFollowerState = CollectionFollowerState<RoomState, RoomEvent>;
+
 // ========================================
-// Room Collection FST Leader Type
+// Room Collection FST Types
 // ========================================
 
 export type RoomCollectionFstLeader = CollectionFstLeader<RoomState, RoomCommand, RoomEvent, RoomError>;
 
+export type RoomCollectionFstFollower = CollectionFstFollower<RoomState, RoomEvent>;
+
 // ========================================
-// Room Collection Factory
+// Room Collection Factories
 // ========================================
 
 export function createRoomCollection(): RoomCollectionFstLeader {
   return createFstCollection(ROOM_ENTITY_TYPE, (snapshot) =>
-    createRoom(snapshot.state.owner, snapshot.state.code)
+    createRoomLeader(snapshot.state.owner, snapshot.state.code)
   );
+}
+
+export function createRoomCollectionFollower(): RoomCollectionFstFollower {
+  return createFstCollectionFollower(createRoomFollower);
 }

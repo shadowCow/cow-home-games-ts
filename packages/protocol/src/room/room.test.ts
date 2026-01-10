@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { createRoom } from "./room";
+import { createRoomLeader } from "./room";
 import type { RoomCommand, RoomEvent, RoomError } from "./room";
 
 describe("Room", () => {
@@ -14,7 +14,7 @@ describe("Room", () => {
       const code = VALID_CODE;
 
       // Act
-      const room = createRoom(ownerId, code);
+      const room = createRoomLeader(ownerId, code);
       const state = room.getState();
 
       // Assert
@@ -28,7 +28,7 @@ describe("Room", () => {
   describe("JoinRoom", () => {
     test("should allow guest to join room with valid code", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       const command: RoomCommand = {
         kind: "JoinRoom",
         roomId: ROOM_ID,
@@ -54,7 +54,7 @@ describe("Room", () => {
 
     test("should allow multiple guests to join", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
@@ -68,7 +68,7 @@ describe("Room", () => {
 
     test("should return error when guest already in room", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
 
       // Act
@@ -87,7 +87,7 @@ describe("Room", () => {
 
     test("should return error when owner tries to join as guest", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "owner123", code: VALID_CODE });
@@ -105,7 +105,7 @@ describe("Room", () => {
 
     test("should return error when code is invalid", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({
@@ -127,7 +127,7 @@ describe("Room", () => {
   describe("LeaveRoom", () => {
     test("should allow guest to leave room", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
 
@@ -149,7 +149,7 @@ describe("Room", () => {
 
     test("should return error when non-guest tries to leave", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "nonexistent" });
@@ -167,7 +167,7 @@ describe("Room", () => {
 
     test("should return error when owner tries to leave", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "owner123" });
@@ -184,7 +184,7 @@ describe("Room", () => {
   describe("RemoveGuest", () => {
     test("should allow owner to remove guest", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
 
@@ -211,7 +211,7 @@ describe("Room", () => {
 
     test("should return error when non-owner tries to remove guest", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
 
@@ -236,7 +236,7 @@ describe("Room", () => {
 
     test("should return error when trying to remove non-existent guest", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({
@@ -261,7 +261,7 @@ describe("Room", () => {
   describe("StartGameSession", () => {
     test("should allow owner to start game session", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({
@@ -289,7 +289,7 @@ describe("Room", () => {
 
     test("should return error when non-owner tries to start session", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
 
       // Act
@@ -313,7 +313,7 @@ describe("Room", () => {
 
     test("should return error when session already active", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({
         kind: "StartGameSession",
         roomId: ROOM_ID,
@@ -341,7 +341,7 @@ describe("Room", () => {
   describe("StartGameSessionBuilder", () => {
     test("should allow owner to start session builder", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({
@@ -369,7 +369,7 @@ describe("Room", () => {
 
     test("should return error when non-owner tries to start builder", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
 
       // Act
@@ -393,7 +393,7 @@ describe("Room", () => {
 
     test("should return error when builder started while session active", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({
         kind: "StartGameSession",
         roomId: ROOM_ID,
@@ -421,7 +421,7 @@ describe("Room", () => {
   describe("ClearRoomSession", () => {
     test("should allow owner to clear active session", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({
         kind: "StartGameSession",
         roomId: ROOM_ID,
@@ -448,7 +448,7 @@ describe("Room", () => {
 
     test("should allow owner to clear active builder", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({
         kind: "StartGameSessionBuilder",
         roomId: ROOM_ID,
@@ -475,7 +475,7 @@ describe("Room", () => {
 
     test("should return error when non-owner tries to clear session", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
       room.handleCommand({
         kind: "StartGameSession",
@@ -504,7 +504,7 @@ describe("Room", () => {
 
     test("should succeed when clearing with no active session", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act
       const result = room.handleCommand({
@@ -527,7 +527,7 @@ describe("Room", () => {
   describe("ChangeRoomCode", () => {
     test("should allow owner to change room code", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       const newCode = "new-code-456";
 
       // Act
@@ -553,7 +553,7 @@ describe("Room", () => {
 
     test("should return error when non-owner tries to change code", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
 
       // Act
@@ -577,7 +577,7 @@ describe("Room", () => {
 
     test("should invalidate old code after change", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
       const newCode = "new-code-456";
       room.handleCommand({
         kind: "ChangeRoomCode",
@@ -616,7 +616,7 @@ describe("Room", () => {
   describe("Complex Scenarios", () => {
     test("should handle full room lifecycle", () => {
       // Arrange
-      const room = createRoom("owner123", VALID_CODE);
+      const room = createRoomLeader("owner123", VALID_CODE);
 
       // Act & Assert - Guests join
       room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });

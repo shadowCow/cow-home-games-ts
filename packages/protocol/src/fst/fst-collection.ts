@@ -164,6 +164,7 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
   };
 
   const initialSnapshot = {
+    kind: "Snapshot" as const,
     state: initialState,
     lastAppliedIndex: 0,
   };
@@ -227,7 +228,7 @@ export function createFstCollection<TEntityState, TEntityCommand, TEntityEvent, 
             ...state,
             entities: {
               ...state.entities,
-              [event.id]: entityFactory({ state: event.initialState, lastAppliedIndex: 0 }),
+              [event.id]: entityFactory({ kind: "Snapshot", state: event.initialState, lastAppliedIndex: 0 }),
             },
           };
         }

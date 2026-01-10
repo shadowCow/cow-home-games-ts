@@ -7,22 +7,26 @@ import { z } from "zod";
 
 export const IndexedEvent = <TEvent extends z.ZodTypeAny>(eventSchema: TEvent) =>
   z.object({
+    kind: z.literal("IndexedEvent"),
     index: z.number(),
     event: eventSchema,
   });
 
 export type IndexedEvent<TEvent> = {
+  kind: "IndexedEvent";
   index: number;
   event: TEvent;
 };
 
 export const Snapshot = <TState extends z.ZodTypeAny>(stateSchema: TState) =>
   z.object({
+    kind: z.literal("Snapshot"),
     state: stateSchema,
     lastAppliedIndex: z.number(),
   });
 
 export type Snapshot<TState> = {
+  kind: "Snapshot";
   state: TState;
   lastAppliedIndex: number;
 };
@@ -80,6 +84,7 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
 
     getSnapshot: function (): Snapshot<TState> {
       return {
+        kind: "Snapshot",
         state,
         lastAppliedIndex: currentIndex,
       };
@@ -92,6 +97,7 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
         // Increment index and create indexed event
         currentIndex++;
         const indexedEvent: IndexedEvent<TEvent> = {
+          kind: "IndexedEvent",
           index: currentIndex,
           event: result.value,
         };
@@ -134,6 +140,7 @@ export function createFstFollower<TState, TEvent>(
 
     getSnapshot: function (): Snapshot<TState> {
       return {
+        kind: "Snapshot",
         state,
         lastAppliedIndex,
       };

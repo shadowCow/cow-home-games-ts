@@ -54,6 +54,7 @@ function createInitialRoomState(ownerId: string, code: string): RoomState {
 
 function createInitialRoomSnapshot(ownerId: string, code: string): Snapshot<RoomState> {
   return {
+    kind: "Snapshot",
     state: createInitialRoomState(ownerId, code),
     lastAppliedIndex: 0,
   };

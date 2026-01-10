@@ -106,6 +106,7 @@ function deserializeRoomCollectionSnapshot(
   serialized: SerializedRoomCollectionSnapshot
 ): Snapshot<RoomCollectionFollowerState> {
   return {
+    kind: "Snapshot",
     state: {
       entities: Object.fromEntries(
         Object.entries(serialized.entities).map(([id, entitySnapshot]) => {

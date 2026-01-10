@@ -39,6 +39,7 @@ describe("GameClient", () => {
     const eventMessage = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 1,
         event: {
           kind: "EntityAdded",
@@ -80,8 +81,8 @@ describe("GameClient", () => {
       kind: "RoomCollectionSnapshot",
       snapshot: {
         entities: {
-          room1: { state: room1State, lastAppliedIndex: 0 },
-          room2: { state: room2State, lastAppliedIndex: 0 },
+          room1: { kind: "Snapshot", state: room1State, lastAppliedIndex: 0 },
+          room2: { kind: "Snapshot", state: room2State, lastAppliedIndex: 0 },
         },
         lastAppliedIndex: 5,
       },
@@ -113,6 +114,7 @@ describe("GameClient", () => {
     const event1 = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 1,
         event: {
           kind: "EntityAdded",
@@ -134,6 +136,7 @@ describe("GameClient", () => {
     const event5 = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 5,
         event: {
           kind: "EntityAdded",
@@ -167,6 +170,7 @@ describe("GameClient", () => {
     const event = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 1,
         event: {
           kind: "EntityAdded",
@@ -241,6 +245,7 @@ describe("GameClient", () => {
     const addRoomEvent = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 1,
         event: {
           kind: "EntityAdded",
@@ -262,12 +267,14 @@ describe("GameClient", () => {
     const updateRoomEvent = {
       kind: "RoomCollectionEvent",
       event: {
+        kind: "IndexedEvent",
         index: 2,
         event: {
           kind: "EntityUpdated",
           entityType: "Room",
           id: "room1",
           event: {
+            kind: "IndexedEvent",
             index: 1,
             event: {
               kind: "GuestJoined",

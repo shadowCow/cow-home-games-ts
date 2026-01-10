@@ -37,8 +37,8 @@ export function createFstCollectionFollower<TEntityState, TEntityEvent>(
     entities: {},
   };
 
-  // Event applier for collection events
-  const applyCollectionEvent = (
+  // Reducer for collection events
+  const collectionReducer = (
     state: CollectionFollowerState<TEntityState, TEntityEvent>,
     event: CollectionEvent<TEntityState, TEntityEvent>
   ): CollectionFollowerState<TEntityState, TEntityEvent> => {
@@ -74,7 +74,7 @@ export function createFstCollectionFollower<TEntityState, TEntityEvent>(
 
         // Apply the indexed event to the entity follower
         // If there's a sync error, it will be caught when the collection follower's
-        // applyEvent is called, not here in the event applier
+        // applyEvent is called, not here in the reducer
         entity.applyEvent(event.event);
 
         // Return state unchanged (the entity follower has been mutated internally)
@@ -86,5 +86,5 @@ export function createFstCollectionFollower<TEntityState, TEntityEvent>(
   return createFstFollower<
     CollectionFollowerState<TEntityState, TEntityEvent>,
     CollectionEvent<TEntityState, TEntityEvent>
-  >(applyCollectionEvent, initialState);
+  >(collectionReducer, initialState);
 }

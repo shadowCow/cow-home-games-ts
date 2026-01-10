@@ -53,11 +53,11 @@ export type CommandHandler<TState, TCommand, TEvent, TError, TContext> = (
   ctx: TContext
 ) => Result<TEvent, TError>;
 
-export type EventApplyer<TState, TEvent> = (s: TState, e: TEvent) => TState;
+export type Reducer<TState, TEvent> = (s: TState, e: TEvent) => TState;
 
 export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
   commandHandler: CommandHandler<TState, TCommand, TEvent, TError, TContext>,
-  eventApplyer: EventApplyer<TState, TEvent>,
+  reducer: Reducer<TState, TEvent>,
   ctx: TContext,
   snapshot: Snapshot<TState>
 ): FstLeader<TState, TCommand, TEvent, TError> {
@@ -66,7 +66,7 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
 
   // Internal function to apply events (not exposed publicly)
   const applyEvent = (e: IndexedEvent<TEvent>): void => {
-    state = eventApplyer(state, e.event);
+    state = reducer(state, e.event);
     // Update currentIndex to the event's index
     if (e.index > currentIndex) {
       currentIndex = e.index;
@@ -123,7 +123,7 @@ export type FstFollower<TState, TEvent> = {
 };
 
 export function createFstFollower<TState, TEvent>(
-  eventApplyer: EventApplyer<TState, TEvent>,
+  reducer: Reducer<TState, TEvent>,
   initialState: TState
 ): FstFollower<TState, TEvent> {
   let state = initialState;
@@ -166,7 +166,7 @@ export function createFstFollower<TState, TEvent>(
       }
 
       // Apply the event payload
-      state = eventApplyer(state, e.event);
+      state = reducer(state, e.event);
       lastAppliedIndex = e.index;
       return ok(undefined);
     },

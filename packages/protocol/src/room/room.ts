@@ -367,10 +367,10 @@ function handleRoomCommand(
 }
 
 // ========================================
-// Room FST Event Applyer
+// Room FST Reducer
 // ========================================
 
-function applyRoomEvent(state: RoomState, event: RoomEvent): RoomState {
+function roomReducer(state: RoomState, event: RoomEvent): RoomState {
   switch (event.kind) {
     case "GuestJoined":
       return {
@@ -426,7 +426,7 @@ export function createRoomLeader(
 ): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
   return createFstLeader<RoomState, RoomCommand, RoomEvent, RoomError, void>(
     handleRoomCommand,
-    applyRoomEvent,
+    roomReducer,
     undefined,
     createInitialRoomSnapshot(ownerId, code)
   );
@@ -435,5 +435,5 @@ export function createRoomLeader(
 export function createRoomFollower(
   initialState: RoomState
 ): FstFollower<RoomState, RoomEvent> {
-  return createFstFollower<RoomState, RoomEvent>(applyRoomEvent, initialState);
+  return createFstFollower<RoomState, RoomEvent>(roomReducer, initialState);
 }

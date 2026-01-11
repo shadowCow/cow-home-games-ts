@@ -33,12 +33,6 @@
   font-size: 0.875rem;
 }
 
-.loading {
-  color: var(--color-text-secondary);
-  text-align: center;
-  font-style: italic;
-}
-
 .error {
   color: var(--color-error);
   text-align: center;

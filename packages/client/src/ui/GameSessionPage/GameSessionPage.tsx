@@ -4,6 +4,7 @@ import { GameService } from "../../services/game/GameService";
 import { NavigationAction } from "../Navigator/navigationReducer";
 import { GameRegistry } from "../../games/GameRegistry";
 import { Button } from "../common/Button/Button";
+import { Loading } from "../common/Loading/Loading";
 import styles from "./GameSessionPage.module.css";
 
 export function GameSessionPage(props: {
@@ -42,7 +43,7 @@ export function GameSessionPage(props: {
     return (
       <div className={styles.container}>
         <div className={styles.content}>
-          <p className={styles.loading}>Loading session...</p>
+          <Loading />
         </div>
       </div>
     );

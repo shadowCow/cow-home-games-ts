@@ -1,14 +1,23 @@
 import { JsonMessageChannel } from "../channel/json-message-channel";
-import { IndexedEvent, Snapshot } from "../fst/fst";
-import { RoomsProjection } from "../room/rooms-projection";
+import { createFstFollower, IndexedEvent, Snapshot } from "../fst/fst";
+import { createProjectionStore } from "../fst/projection-store";
+import {
+  RoomsProjection,
+  roomsProjectionReducer,
+  roomsProjectionInitialState,
+} from "../room/rooms-projection";
+import type { RoomState, RoomEvent } from "../room/room";
+import type { CollectionEvent } from "../fst/fst-collection";
 import { z } from "zod";
 
 // ========================================
 // RoomsProjection Sync Messages
 // ========================================
 
+// Event type for RoomsProjection is CollectionEvent<RoomState, RoomEvent>
+// We use z.any() here as a placeholder since we validate the shape via the store
 const GameServerProxyMessage = z.discriminatedUnion("kind", [
-  IndexedEvent(z.any()), // TODO: Define RoomsProjectionEvent type
+  IndexedEvent(z.any()),
   Snapshot(RoomsProjection),
 ]);
 
@@ -26,13 +35,17 @@ export type GameServerProxy = {
 // Game Server Proxy Factory
 // ========================================
 
-export function createGameServerProxy(channel: JsonMessageChannel): GameServerProxy {
-  let currentProjection: RoomsProjection = {
-    kind: "RoomsProjection",
-    rooms: [],
-  };
-  let lastAppliedIndex = 0;
-  const subscribers: Array<(projection: RoomsProjection) => void> = [];
+export function createGameServerProxy(
+  channel: JsonMessageChannel
+): GameServerProxy {
+  // Create FstFollower with the roomsProjectionReducer
+  const follower = createFstFollower<
+    RoomsProjection,
+    CollectionEvent<RoomState, RoomEvent>
+  >(roomsProjectionReducer, roomsProjectionInitialState());
+
+  // Wrap follower in ProjectionStore for subscription management
+  const store = createProjectionStore(follower);
 
   // Handle incoming messages from the server
   channel.onMessage((messageString: string) => {
@@ -49,26 +62,18 @@ export function createGameServerProxy(channel: JsonMessageChannel): GameServerPr
 
       switch (validatedMessage.kind) {
         case "Snapshot": {
-          currentProjection = validatedMessage.state;
-          lastAppliedIndex = validatedMessage.lastAppliedIndex;
-          notifySubscribers();
+          const result = store.applySnapshot(validatedMessage);
+          if (result.kind === "Err") {
+            console.error("Failed to apply snapshot:", result.value);
+          }
           break;
         }
 
         case "IndexedEvent": {
-          // Validate event ordering
-          if (validatedMessage.index !== lastAppliedIndex + 1) {
-            console.error("Event gap detected", {
-              received: validatedMessage.index,
-              expected: lastAppliedIndex + 1,
-            });
-            return;
+          const result = store.applyEvent(validatedMessage);
+          if (result.kind === "Err") {
+            console.error("Failed to apply event:", result.value);
           }
-
-          // TODO: Apply event to projection
-          // For now, we just update the index
-          lastAppliedIndex = validatedMessage.index;
-          notifySubscribers();
           break;
         }
       }
@@ -77,23 +82,11 @@ export function createGameServerProxy(channel: JsonMessageChannel): GameServerPr
     }
   });
 
-  function notifySubscribers(): void {
-    subscribers.forEach((callback) => callback(currentProjection));
-  }
-
   return {
-    subscribeToRooms(callback: (projection: RoomsProjection) => void): () => void {
-      subscribers.push(callback);
-      // Immediately call with current state
-      callback(currentProjection);
-
-      // Return unsubscribe function
-      return () => {
-        const index = subscribers.indexOf(callback);
-        if (index > -1) {
-          subscribers.splice(index, 1);
-        }
-      };
+    subscribeToRooms(
+      callback: (projection: RoomsProjection) => void
+    ): () => void {
+      return store.subscribe(callback);
     },
   };
 }

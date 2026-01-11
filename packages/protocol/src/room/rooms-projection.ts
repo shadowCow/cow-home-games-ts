@@ -15,6 +15,17 @@ export const RoomsProjection = z.object({
 export type RoomsProjection = z.infer<typeof RoomsProjection>;
 
 // ========================================
+// RoomsProjection Factory
+// ========================================
+
+export function roomsProjectionInitialState(): RoomsProjection {
+  return {
+    kind: "RoomsProjection",
+    rooms: [],
+  };
+}
+
+// ========================================
 // RoomsProjection Reducer
 // ========================================
 

@@ -37,6 +37,7 @@
 
   --color-background: var(--palette-neutral-800);
   --color-surface: var(--palette-neutral-700);
+  --color-surface-hover: var(--palette-neutral-600);
   --color-surface-variant: var(--palette-neutral-600);
 
   --color-text-primary: var(--palette-neutral-100);

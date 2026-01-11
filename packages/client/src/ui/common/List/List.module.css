@@ -1,0 +1,26 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.listItem {
+  display: flex;
+  flex-shrink: 0;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.listItem:hover {
+  background-color: var(--color-surface-hover);
+}
+
+.listItem.selected {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}

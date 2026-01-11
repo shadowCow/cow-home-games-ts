@@ -5,11 +5,6 @@
   padding: 1rem;
 }
 
-.loading {
-  text-align: center;
-  color: var(--color-text-secondary);
-}
-
 .roomItem {
   display: flex;
   flex-direction: column;

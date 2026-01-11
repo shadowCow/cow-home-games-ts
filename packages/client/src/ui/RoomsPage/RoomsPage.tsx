@@ -2,6 +2,7 @@ import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
 import { RoomsProjection } from "@cow-sunday/protocol";
 import { List } from "../common/List/List";
+import { Loading } from "../common/Loading/Loading";
 import styles from "./RoomsPage.module.css";
 
 export function RoomsPage(props: { navigate: Dispatch<NavigationAction> }) {
@@ -26,7 +27,7 @@ export function RoomsPage(props: { navigate: Dispatch<NavigationAction> }) {
   return (
     <div className={styles.container}>
       {rooms === undefined ? (
-        <p className={styles.loading}>Loading...</p>
+        <Loading />
       ) : (
         <List
           items={rooms.rooms}

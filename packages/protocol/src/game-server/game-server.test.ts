@@ -5,7 +5,7 @@ import { createGameServer } from "./game-server";
 describe("Game Server", () => {
   test("should handle valid RoomCollectionCommand - AddEntity", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     const message = {
       kind: "AddEntity",
       entityType: "Room",
@@ -38,7 +38,7 @@ describe("Game Server", () => {
 
   test("should handle valid RoomCollectionCommand - UpdateEntity", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -89,7 +89,7 @@ describe("Game Server", () => {
 
   test("should handle valid RoomCollectionCommand - RemoveEntity", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -126,7 +126,7 @@ describe("Game Server", () => {
 
   test("should return ValidationFailure for invalid message", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     const invalidMessage = {
       kind: "InvalidKind",
       data: "some data",
@@ -144,7 +144,7 @@ describe("Game Server", () => {
 
   test("should return ValidationFailure for message with missing fields", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     const invalidMessage = {
       kind: "AddEntity",
       // missing required fields like entityType, id, initialState
@@ -162,7 +162,7 @@ describe("Game Server", () => {
 
   test("should return error when adding duplicate room", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     const addRoomMessage = {
       kind: "AddEntity",
       entityType: "Room",
@@ -196,7 +196,7 @@ describe("Game Server", () => {
 
   test("should return error when updating non-existent room", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
 
     // Act
     const response = server.handleMessage({
@@ -227,7 +227,7 @@ describe("Game Server", () => {
 
   test("should return entity error when room command fails", () => {
     // Arrange
-    const server = createGameServer();
+    const server = createGameServer({ maxSubscribers: 100 });
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -266,5 +266,77 @@ describe("Game Server", () => {
         }
       }
     }
+  });
+
+  test("should accept subscription when under max subscribers limit", () => {
+    // Arrange
+    const server = createGameServer({ maxSubscribers: 2 });
+
+    // Act
+    const response = server.handleMessage({
+      kind: "SubscribeRooms",
+      clientId: "client1",
+    });
+
+    // Assert
+    assert.equal(response.kind, "SubscribeRoomsAccepted");
+    if (response.kind === "SubscribeRoomsAccepted") {
+      assert.equal(response.clientId, "client1");
+    }
+
+    const connectedClients = server.getConnectedClients();
+    assert.equal(connectedClients.length, 1);
+    assert.ok(connectedClients.includes("client1"));
+  });
+
+  test("should reject subscription when max subscribers limit reached", () => {
+    // Arrange
+    const server = createGameServer({ maxSubscribers: 2 });
+    server.handleMessage({ kind: "SubscribeRooms", clientId: "client1" });
+    server.handleMessage({ kind: "SubscribeRooms", clientId: "client2" });
+
+    // Act - Try to add a third subscriber
+    const response = server.handleMessage({
+      kind: "SubscribeRooms",
+      clientId: "client3",
+    });
+
+    // Assert
+    assert.equal(response.kind, "SubscribeRoomsRejected");
+    if (response.kind === "SubscribeRoomsRejected") {
+      assert.equal(response.clientId, "client3");
+      assert.ok(response.message.includes("Maximum number of subscribers"));
+      assert.ok(response.message.includes("2"));
+    }
+
+    const connectedClients = server.getConnectedClients();
+    assert.equal(connectedClients.length, 2);
+    assert.ok(!connectedClients.includes("client3"));
+  });
+
+  test("should allow new subscription after unsubscribe", () => {
+    // Arrange
+    const server = createGameServer({ maxSubscribers: 1 });
+    server.handleMessage({ kind: "SubscribeRooms", clientId: "client1" });
+
+    // Act - Unsubscribe first client
+    server.handleMessage({ kind: "UnsubscribeRooms", clientId: "client1" });
+
+    // Act - Subscribe with new client
+    const response = server.handleMessage({
+      kind: "SubscribeRooms",
+      clientId: "client2",
+    });
+
+    // Assert
+    assert.equal(response.kind, "SubscribeRoomsAccepted");
+    if (response.kind === "SubscribeRoomsAccepted") {
+      assert.equal(response.clientId, "client2");
+    }
+
+    const connectedClients = server.getConnectedClients();
+    assert.equal(connectedClients.length, 1);
+    assert.ok(connectedClients.includes("client2"));
+    assert.ok(!connectedClients.includes("client1"));
   });
 });

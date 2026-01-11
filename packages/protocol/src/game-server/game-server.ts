@@ -62,7 +62,21 @@ export type RoomCollectionResponse = {
   result: Result<IndexedEvent<RoomCollectionEvent>, RoomCollectionError>;
 };
 
-export type GameServerResponse = RoomCollectionResponse;
+export type SubscribeRoomsAccepted = {
+  kind: "SubscribeRoomsAccepted";
+  clientId: string;
+};
+
+export type SubscribeRoomsRejected = {
+  kind: "SubscribeRoomsRejected";
+  clientId: string;
+  message: string;
+};
+
+export type GameServerResponse =
+  | RoomCollectionResponse
+  | SubscribeRoomsAccepted
+  | SubscribeRoomsRejected;
 
 // ========================================
 // Game Server State
@@ -96,10 +110,11 @@ export type GameServer = {
 
 export type GameServerConfig = {
   onBroadcast?: BroadcastCallback;
+  maxSubscribers: number;
 };
 
-export function createGameServer(config: GameServerConfig = {}): GameServer {
-  const { onBroadcast } = config;
+export function createGameServer(config: GameServerConfig): GameServer {
+  const { onBroadcast, maxSubscribers } = config;
   const rooms = createRoomCollection();
 
   const state: GameServerState = {
@@ -161,14 +176,22 @@ export function createGameServer(config: GameServerConfig = {}): GameServer {
         }
 
         case "SubscribeRooms": {
+          // Check if max subscribers limit reached
+          if (connectedClients.size >= maxSubscribers) {
+            return {
+              kind: "SubscribeRoomsRejected",
+              clientId: validatedMessage.clientId,
+              message: `Maximum number of subscribers (${maxSubscribers}) reached`,
+            };
+          }
+
           // Register client and sync current state
           this.registerClient(validatedMessage.clientId);
           this.syncClient(validatedMessage.clientId);
 
-          // Return a validation failure for now (subscription is handled via side effects)
           return {
-            kind: "ValidationFailure",
-            message: "SubscribeRooms processed",
+            kind: "SubscribeRoomsAccepted",
+            clientId: validatedMessage.clientId,
           };
         }
 

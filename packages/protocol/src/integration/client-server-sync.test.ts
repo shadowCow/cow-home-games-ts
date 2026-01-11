@@ -20,6 +20,7 @@ function createTestEnvironment(clientIds: string[]): TestEnv {
 
   // Create server with broadcast callback
   const server = createGameServer({
+    maxSubscribers: 100,
     onBroadcast: (message: GameClientMessage, clientId: string) => {
       const client = clients.get(clientId);
       if (client) {

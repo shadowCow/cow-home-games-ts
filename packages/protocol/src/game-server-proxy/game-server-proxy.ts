@@ -1,5 +1,5 @@
 import { JsonMessageChannel } from "../channel/json-message-channel";
-import { createFstFollower, IndexedEvent, Snapshot } from "../fst/fst";
+import { createFstFollower } from "../fst/fst";
 import { createProjectionStore } from "../fst/projection-store";
 import {
   RoomsProjection,
@@ -8,20 +8,7 @@ import {
 } from "../room/rooms-projection";
 import type { RoomState, RoomEvent } from "../room/room";
 import type { CollectionEvent } from "../fst/fst-collection";
-import { z } from "zod";
-
-// ========================================
-// RoomsProjection Sync Messages
-// ========================================
-
-// Event type for RoomsProjection is CollectionEvent<RoomState, RoomEvent>
-// We use z.any() here as a placeholder since we validate the shape via the store
-const GameServerProxyMessage = z.discriminatedUnion("kind", [
-  IndexedEvent(z.any()),
-  Snapshot(RoomsProjection),
-]);
-
-type GameServerProxyMessage = z.infer<typeof GameServerProxyMessage>;
+import { GameServerOutgoingMessage } from "../game-server/game-server";
 
 // ========================================
 // Game Server Proxy Interface
@@ -51,7 +38,7 @@ export function createGameServerProxy(
   channel.onMessage((messageString: string) => {
     try {
       const message = JSON.parse(messageString);
-      const parseResult = GameServerProxyMessage.safeParse(message);
+      const parseResult = GameServerOutgoingMessage.safeParse(message);
 
       if (!parseResult.success) {
         console.error("Invalid message format:", parseResult.error);

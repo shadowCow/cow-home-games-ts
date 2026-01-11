@@ -45,12 +45,7 @@ function sendCommand(
   command: RoomCollectionCommand
 ): IndexedEvent<RoomCollectionEvent> {
   // Server processes command and automatically broadcasts to clients
-  const serverMessage = {
-    kind: "RoomCollectionCommand",
-    command,
-  };
-
-  const response = env.server.handleMessage(serverMessage);
+  const response = env.server.handleMessage(command);
 
   // Assert - Command should succeed
   assert.equal(response.kind, "RoomCollectionResponse");

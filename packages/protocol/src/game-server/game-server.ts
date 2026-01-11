@@ -33,10 +33,7 @@ export type UnsubscribeRooms = z.infer<typeof UnsubscribeRooms>;
 
 // Combined message type that server can receive from clients
 export const GameServerIncomingMessage = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("RoomCollectionCommand"),
-    command: RoomCollectionCommand,
-  }),
+  RoomCollectionCommand,
   SubscribeRooms,
   UnsubscribeRooms,
 ]);
@@ -143,8 +140,10 @@ export function createGameServer(config: GameServerConfig = {}): GameServer {
 
       // Route message to appropriate FST
       switch (validatedMessage.kind) {
-        case "RoomCollectionCommand": {
-          const result = state.rooms.handleCommand(validatedMessage.command);
+        case "AddEntity":
+        case "RemoveEntity":
+        case "UpdateEntity": {
+          const result = state.rooms.handleCommand(validatedMessage);
 
           // If command succeeded, broadcast the event to all clients
           if (result.kind === "Ok") {

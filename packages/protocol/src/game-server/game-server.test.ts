@@ -7,17 +7,14 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     const message = {
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "AddEntity",
-        entityType: "Room",
-        id: "room1",
-        initialState: {
-          owner: "user1",
-          code: "ABC123",
-          guests: [],
-          activeSession: { kind: "RoomNoSession" },
-        },
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
       },
     };
 
@@ -43,33 +40,27 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     server.handleMessage({
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "AddEntity",
-        entityType: "Room",
-        id: "room1",
-        initialState: {
-          owner: "user1",
-          code: "ABC123",
-          guests: [],
-          activeSession: { kind: "RoomNoSession" },
-        },
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
       },
     });
 
     // Act
     const response = server.handleMessage({
-      kind: "RoomCollectionCommand",
+      kind: "UpdateEntity",
+      entityType: "Room",
+      id: "room1",
       command: {
-        kind: "UpdateEntity",
-        entityType: "Room",
-        id: "room1",
-        command: {
-          kind: "JoinRoom",
-          roomId: "room1",
-          userId: "user2",
-          code: "ABC123",
-        },
+        kind: "JoinRoom",
+        roomId: "room1",
+        userId: "user2",
+        code: "ABC123",
       },
     });
 
@@ -100,28 +91,22 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     server.handleMessage({
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "AddEntity",
-        entityType: "Room",
-        id: "room1",
-        initialState: {
-          owner: "user1",
-          code: "ABC123",
-          guests: [],
-          activeSession: { kind: "RoomNoSession" },
-        },
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
       },
     });
 
     // Act
     const response = server.handleMessage({
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "RemoveEntity",
-        entityType: "Room",
-        id: "room1",
-      },
+      kind: "RemoveEntity",
+      entityType: "Room",
+      id: "room1",
     });
 
     // Assert
@@ -161,8 +146,8 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     const invalidMessage = {
-      kind: "RoomCollectionCommand",
-      // missing command field
+      kind: "AddEntity",
+      // missing required fields like entityType, id, initialState
     };
 
     // Act
@@ -179,17 +164,14 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     const addRoomMessage = {
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "AddEntity",
-        entityType: "Room",
-        id: "room1",
-        initialState: {
-          owner: "user1",
-          code: "ABC123",
-          guests: [],
-          activeSession: { kind: "RoomNoSession" },
-        },
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
       },
     };
 
@@ -218,17 +200,14 @@ describe("Game Server", () => {
 
     // Act
     const response = server.handleMessage({
-      kind: "RoomCollectionCommand",
+      kind: "UpdateEntity",
+      entityType: "Room",
+      id: "nonexistent",
       command: {
-        kind: "UpdateEntity",
-        entityType: "Room",
-        id: "nonexistent",
-        command: {
-          kind: "JoinRoom",
-          roomId: "nonexistent",
-          userId: "user1",
-          code: "ABC123",
-        },
+        kind: "JoinRoom",
+        roomId: "nonexistent",
+        userId: "user1",
+        code: "ABC123",
       },
     });
 
@@ -250,33 +229,27 @@ describe("Game Server", () => {
     // Arrange
     const server = createGameServer();
     server.handleMessage({
-      kind: "RoomCollectionCommand",
-      command: {
-        kind: "AddEntity",
-        entityType: "Room",
-        id: "room1",
-        initialState: {
-          owner: "user1",
-          code: "ABC123",
-          guests: [],
-          activeSession: { kind: "RoomNoSession" },
-        },
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
       },
     });
 
     // Act - Try to join with wrong code
     const response = server.handleMessage({
-      kind: "RoomCollectionCommand",
+      kind: "UpdateEntity",
+      entityType: "Room",
+      id: "room1",
       command: {
-        kind: "UpdateEntity",
-        entityType: "Room",
-        id: "room1",
-        command: {
-          kind: "JoinRoom",
-          roomId: "room1",
-          userId: "user2",
-          code: "WRONG",
-        },
+        kind: "JoinRoom",
+        roomId: "room1",
+        userId: "user2",
+        code: "WRONG",
       },
     });
 

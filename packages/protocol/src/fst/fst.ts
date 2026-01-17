@@ -5,7 +5,9 @@ import { z } from "zod";
 // Event Sourcing Types
 // ========================================
 
-export const IndexedEvent = <TEvent extends z.ZodTypeAny>(eventSchema: TEvent) =>
+export const IndexedEvent = <TEvent extends z.ZodTypeAny>(
+  eventSchema: TEvent
+) =>
   z.object({
     kind: z.literal("IndexedEvent"),
     index: z.number(),
@@ -30,6 +32,17 @@ export type Snapshot<TState> = {
   state: TState;
   lastAppliedIndex: number;
 };
+
+export function createSnapshot<TState>(
+  state: TState,
+  lastAppliedIndex?: number
+): Snapshot<TState> {
+  return {
+    kind: "Snapshot",
+    state,
+    lastAppliedIndex: lastAppliedIndex ? lastAppliedIndex : 0,
+  };
+}
 
 export type SyncError =
   | { kind: "DuplicateEvent"; receivedIndex: number; lastAppliedIndex: number }
@@ -90,7 +103,9 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
       };
     },
 
-    handleCommand: function (c: TCommand): Result<IndexedEvent<TEvent>, TError> {
+    handleCommand: function (
+      c: TCommand
+    ): Result<IndexedEvent<TEvent>, TError> {
       const result = commandHandler(state, c, ctx);
 
       if (result.kind === "Ok") {
@@ -171,7 +186,9 @@ export function createFstFollower<TState, TEvent>(
       return ok(undefined);
     },
 
-    applySnapshot: function (snapshot: Snapshot<TState>): Result<void, SyncError> {
+    applySnapshot: function (
+      snapshot: Snapshot<TState>
+    ): Result<void, SyncError> {
       // Only apply if snapshot is more recent
       if (snapshot.lastAppliedIndex <= lastAppliedIndex) {
         return err({

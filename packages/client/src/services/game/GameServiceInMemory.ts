@@ -1,5 +1,5 @@
 import { GameService } from "./GameService";
-import { Game, GameSession } from "@cow-sunday/protocol";
+import { Game, GameSession, RoomState, RoomsProjection } from "@cow-sunday/protocol";
 
 export class GameServiceInMemory implements GameService {
   private games: Game[] = [
@@ -11,6 +11,23 @@ export class GameServiceInMemory implements GameService {
   ];
 
   private sessions: GameSession[] = [];
+
+  private rooms: RoomState[] = [
+    {
+      id: "room-1",
+      owner: "Alice",
+      code: "ABC123",
+      guests: ["Bob"],
+      activeSession: { kind: "RoomNoSession" },
+    },
+    {
+      id: "room-2",
+      owner: "Charlie",
+      code: "DEF456",
+      guests: [],
+      activeSession: { kind: "RoomNoSession" },
+    },
+  ];
 
   async listGames(): Promise<Game[]> {
     return this.games;
@@ -37,5 +54,23 @@ export class GameServiceInMemory implements GameService {
       throw new Error(`Game session with id ${id} not found`);
     }
     return session;
+  }
+
+  async listRooms(): Promise<RoomsProjection> {
+    return {
+      kind: "RoomsProjection",
+      rooms: this.rooms.map((room) => ({
+        entityId: room.id,
+        roomOwner: room.owner,
+      })),
+    };
+  }
+
+  async getRoom(id: string): Promise<RoomState> {
+    const room = this.rooms.find((r) => r.id === id);
+    if (!room) {
+      throw new Error(`Room with id ${id} not found`);
+    }
+    return room;
   }
 }

@@ -11,6 +11,8 @@ import { UserRepo } from './user-repo/UserRepo';
 import { GameRepoInMemory } from './game/GameRepoInMemory';
 import { GameSessionRepoInMemory } from './game/GameSessionRepoInMemory';
 import { registerGameRoutes } from './game/GameApi';
+import { RoomRepoInMemory } from './room/RoomRepoInMemory';
+import { registerRoomRoutes } from './room/RoomApi';
 import { config } from './config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,12 +35,16 @@ const authGateway = new AuthGatewayJwt(fastify.jwt, userRepo);
 
 const gameRepo = new GameRepoInMemory();
 const gameSessionRepo = new GameSessionRepoInMemory();
+const roomRepo = new RoomRepoInMemory();
 
 // Register auth routes
 registerAuthRoutes(fastify, authGateway);
 
 // Register game routes
 registerGameRoutes(fastify, gameRepo, gameSessionRepo);
+
+// Register room routes
+registerRoomRoutes(fastify, roomRepo);
 
 // API routes
 fastify.get('/api/hello', async () => {

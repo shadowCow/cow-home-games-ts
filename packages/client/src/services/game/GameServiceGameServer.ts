@@ -1,4 +1,4 @@
-import { Game, GameSession } from "@cow-sunday/protocol";
+import { Game, GameSession, RoomState, RoomsProjection } from "@cow-sunday/protocol";
 import { GameService } from "./GameService";
 
 export class GameServiceGameServer implements GameService {
@@ -53,6 +53,29 @@ export class GameServiceGameServer implements GameService {
         throw new Error(`Game session with id ${id} not found`);
       }
       throw new Error(`Failed to fetch game session: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async listRooms(): Promise<RoomsProjection> {
+    const response = await fetch(`${this.baseUrl}/api/rooms`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch rooms: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getRoom(id: string): Promise<RoomState> {
+    const response = await fetch(`${this.baseUrl}/api/rooms/${id}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Room with id ${id} not found`);
+      }
+      throw new Error(`Failed to fetch room: ${response.status}`);
     }
 
     return response.json();

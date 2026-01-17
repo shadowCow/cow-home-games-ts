@@ -1,10 +1,14 @@
 import { Dispatch, useState } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
 import { RoomState } from "@cow-sunday/protocol";
+import { GameService } from "../../services/game/GameService";
 import { Button } from "../common/Button/Button";
 import styles from "./RoomPage.module.css";
 
-export function RoomPage(props: { navigate: Dispatch<NavigationAction> }) {
+export function RoomPage(props: {
+  gameService: GameService;
+  navigate: Dispatch<NavigationAction>;
+}) {
   const [copied, setCopied] = useState(false);
 
   // TODO: Replace with actual room data fetched based on roomId

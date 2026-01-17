@@ -26,9 +26,9 @@ export function Navigator(props: {
   // Render the current view
   switch (state.currentView.kind) {
     case "Rooms":
-      return <RoomsPage navigate={dispatch} />;
+      return <RoomsPage gameService={props.gameService} navigate={dispatch} />;
     case "Room":
-      return <RoomPage navigate={dispatch} />;
+      return <RoomPage gameService={props.gameService} navigate={dispatch} />;
     case "GameSessions":
       return (
         <GameSessionsPage

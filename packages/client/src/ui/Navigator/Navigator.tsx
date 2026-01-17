@@ -1,6 +1,7 @@
 import { useReducer, Dispatch } from "react";
 import { GameService } from "../../services/game/GameService";
 import { GameRegistry } from "../../games/GameRegistry";
+import { RoomsPage } from "../RoomsPage/RoomsPage";
 import { GameSessionsPage } from "../GameSessionsPage/GameSessionsPage";
 import { GamesPage } from "../GamesPage/GamesPage";
 import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
@@ -23,6 +24,8 @@ export function Navigator(props: {
 
   // Render the current view
   switch (state.currentView.kind) {
+    case "Rooms":
+      return <RoomsPage navigate={dispatch} />;
     case "GameSessions":
       return (
         <GameSessionsPage

@@ -11,6 +11,7 @@ describe("Game Server", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -44,6 +45,7 @@ describe("Game Server", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -95,6 +97,7 @@ describe("Game Server", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -168,6 +171,7 @@ describe("Game Server", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -233,6 +237,7 @@ describe("Game Server", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],

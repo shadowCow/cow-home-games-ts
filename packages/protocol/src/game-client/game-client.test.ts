@@ -30,6 +30,7 @@ describe("GameClient", () => {
     // Arrange
     const client = createGameClient();
     const initialState: RoomState = {
+      id: "room1",
       owner: "user1",
       code: "ABC123",
       guests: [],
@@ -64,6 +65,7 @@ describe("GameClient", () => {
     // Arrange
     const client = createGameClient();
     const room1State: RoomState = {
+      id: "room1",
       owner: "user1",
       code: "ABC123",
       guests: ["user2"],
@@ -71,6 +73,7 @@ describe("GameClient", () => {
     };
 
     const room2State: RoomState = {
+      id: "room2",
       owner: "user3",
       code: "XYZ789",
       guests: [],
@@ -121,6 +124,7 @@ describe("GameClient", () => {
           entityType: "Room",
           id: "room1",
           initialState: {
+            id: "room1",
             owner: "user1",
             code: "ABC123",
             guests: [],
@@ -143,6 +147,7 @@ describe("GameClient", () => {
           entityType: "Room",
           id: "room2",
           initialState: {
+            id: "room1",
             owner: "user2",
             code: "XYZ789",
             guests: [],
@@ -177,6 +182,7 @@ describe("GameClient", () => {
           entityType: "Room",
           id: "room1",
           initialState: {
+            id: "room1",
             owner: "user1",
             code: "ABC123",
             guests: [],
@@ -252,6 +258,7 @@ describe("GameClient", () => {
           entityType: "Room",
           id: "room1",
           initialState: {
+            id: "room1",
             owner: "user1",
             code: "ABC123",
             guests: [],

@@ -81,7 +81,7 @@ export type RoomCollectionFstFollower = CollectionFstFollower<RoomState, RoomEve
 
 export function createRoomCollection(): RoomCollectionFstLeader {
   return createFstCollection(ROOM_ENTITY_TYPE, (snapshot) =>
-    createRoomLeader(snapshot.state.owner, snapshot.state.code)
+    createRoomLeader(snapshot.state.id, snapshot.state.owner, snapshot.state.code)
   );
 }
 

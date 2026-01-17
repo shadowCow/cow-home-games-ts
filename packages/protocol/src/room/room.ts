@@ -35,6 +35,7 @@ export const RoomSessionState = z.discriminatedUnion("kind", [
 export type RoomSessionState = z.infer<typeof RoomSessionState>;
 
 export const RoomState = z.object({
+  id: z.string(),
   owner: z.string(),
   code: z.string(),
   guests: z.array(z.string()),
@@ -43,8 +44,9 @@ export const RoomState = z.object({
 
 export type RoomState = z.infer<typeof RoomState>;
 
-function createInitialRoomState(ownerId: string, code: string): RoomState {
+function createInitialRoomState(id: string, ownerId: string, code: string): RoomState {
   return {
+    id: id,
     owner: ownerId,
     code: code,
     guests: [],
@@ -52,10 +54,10 @@ function createInitialRoomState(ownerId: string, code: string): RoomState {
   };
 }
 
-function createInitialRoomSnapshot(ownerId: string, code: string): Snapshot<RoomState> {
+function createInitialRoomSnapshot(id: string, ownerId: string, code: string): Snapshot<RoomState> {
   return {
     kind: "Snapshot",
-    state: createInitialRoomState(ownerId, code),
+    state: createInitialRoomState(id, ownerId, code),
     lastAppliedIndex: 0,
   };
 }
@@ -421,6 +423,7 @@ function roomReducer(state: RoomState, event: RoomEvent): RoomState {
 // ========================================
 
 export function createRoomLeader(
+  id: string,
   ownerId: string,
   code: string
 ): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
@@ -428,7 +431,7 @@ export function createRoomLeader(
     handleRoomCommand,
     roomReducer,
     undefined,
-    createInitialRoomSnapshot(ownerId, code)
+    createInitialRoomSnapshot(id, ownerId, code)
   );
 }
 

@@ -1,5 +1,6 @@
 // Available views in the application
 export type View =
+  | { kind: "Rooms" }
   | { kind: "GameSessions" }
   | { kind: "Games" }
   | { kind: "GameSessionBuilder"; selectedGameName: string }
@@ -12,6 +13,7 @@ export type NavigationState = {
 
 // Navigation actions
 export type NavigationAction =
+  | { type: "NavigateToRooms" }
   | { type: "NavigateToGameSessions" }
   | { type: "NavigateToGames" }
   | { type: "NavigateToGameSessionBuilder"; selectedGameName: string }
@@ -23,6 +25,8 @@ export function navigationReducer(
   action: NavigationAction
 ): NavigationState {
   switch (action.type) {
+    case "NavigateToRooms":
+      return { currentView: { kind: "Rooms" } };
     case "NavigateToGameSessions":
       return { currentView: { kind: "GameSessions" } };
     case "NavigateToGames":
@@ -46,6 +50,6 @@ export function navigationReducer(
 // Initial state factory
 export function createInitialNavigationState(): NavigationState {
   return {
-    currentView: { kind: "GameSessions" },
+    currentView: { kind: "Rooms" },
   };
 }

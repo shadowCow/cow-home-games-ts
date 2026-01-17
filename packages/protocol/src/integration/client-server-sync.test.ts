@@ -1,7 +1,11 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { createGameServer, GameServer } from "../game-server/game-server";
-import { createGameClient, GameClient, GameClientMessage } from "../game-client/game-client";
+import {
+  createGameClient,
+  GameClient,
+  GameClientMessage,
+} from "../game-client/game-client";
 import type { RoomCollectionCommand } from "../room/room-collection";
 import type { IndexedEvent } from "../fst/fst";
 import type { RoomCollectionEvent } from "../room/room-collection";
@@ -25,7 +29,11 @@ function createTestEnvironment(clientIds: string[]): TestEnv {
       const client = clients.get(clientId);
       if (client) {
         const result = client.handleMessage(message);
-        assert.equal(result.kind, "Ok", `Client ${clientId} should handle broadcast successfully`);
+        assert.equal(
+          result.kind,
+          "Ok",
+          `Client ${clientId} should handle broadcast successfully`
+        );
       }
     },
   });
@@ -75,6 +83,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -110,6 +119,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -157,6 +167,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC123",
         guests: [],
@@ -196,11 +207,17 @@ describe("Client-Server Synchronization", () => {
 
     // Assert
 
-    const lateClientRoom = lateClient.getState().rooms.getState().entities["room1"];
-    const client1Room = env.clients.get("client1")!.getState().rooms.getState().entities["room1"];
+    const lateClientRoom = lateClient.getState().rooms.getState().entities[
+      "room1"
+    ];
+    const client1Room = env.clients.get("client1")!.getState().rooms.getState()
+      .entities["room1"];
 
     assert.deepEqual(lateClientRoom.getState(), client1Room.getState());
-    assert.equal(lateClientRoom.getLastAppliedIndex(), client1Room.getLastAppliedIndex());
+    assert.equal(
+      lateClientRoom.getLastAppliedIndex(),
+      client1Room.getLastAppliedIndex()
+    );
     assert.deepEqual(lateClientRoom.getState().guests, ["user2", "user3"]);
   });
 
@@ -214,6 +231,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC",
         guests: [],
@@ -226,6 +244,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room2",
       initialState: {
+        id: "room1",
         owner: "user2",
         code: "XYZ",
         guests: [],
@@ -314,6 +333,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC",
         guests: [],
@@ -330,7 +350,11 @@ describe("Client-Server Synchronization", () => {
 
     // Assert
     const serverRooms = env.server.getState().rooms.getState().entities;
-    assert.equal(serverRooms["room1"], undefined, "Server should not have room1");
+    assert.equal(
+      serverRooms["room1"],
+      undefined,
+      "Server should not have room1"
+    );
 
     for (const [clientId, client] of env.clients) {
       const clientRooms = client.getState().rooms.getState().entities;
@@ -352,6 +376,7 @@ describe("Client-Server Synchronization", () => {
       entityType: "Room",
       id: "room1",
       initialState: {
+        id: "room1",
         owner: "user1",
         code: "ABC",
         guests: [],
@@ -394,6 +419,10 @@ describe("Client-Server Synchronization", () => {
       .entities["room1"].getLastAppliedIndex();
 
     assert.equal(collectionIndex, 3, "Collection should have applied 3 events");
-    assert.equal(roomIndex, 2, "Room should have applied 2 events (2 JoinRoom commands)");
+    assert.equal(
+      roomIndex,
+      2,
+      "Room should have applied 2 events (2 JoinRoom commands)"
+    );
   });
 });

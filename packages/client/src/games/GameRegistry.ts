@@ -1,3 +1,5 @@
+import { JSX } from "react";
+
 // Type for a game component
 export type GameComponent = (props: {
   gameState: Record<string, unknown>;

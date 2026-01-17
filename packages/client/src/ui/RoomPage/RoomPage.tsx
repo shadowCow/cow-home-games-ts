@@ -4,6 +4,7 @@ import { RoomState } from "@cow-sunday/protocol";
 import { GameService } from "../../services/game/GameService";
 import { Button } from "../common/Button/Button";
 import { Loading } from "../common/Loading/Loading";
+import { CopyableText } from "../common/CopyableText/CopyableText";
 import styles from "./RoomPage.module.css";
 
 export function RoomPage(props: {
@@ -11,7 +12,6 @@ export function RoomPage(props: {
   roomId: string;
   navigate: Dispatch<NavigationAction>;
 }) {
-  const [copied, setCopied] = useState(false);
   const [room, setRoom] = useState<RoomState>();
   const [error, setError] = useState<string>();
 
@@ -29,17 +29,6 @@ export function RoomPage(props: {
 
     fetchRoom();
   }, [props.gameService, props.roomId]);
-
-  const handleCopyCode = async () => {
-    if (!room) return;
-    try {
-      await navigator.clipboard.writeText(room.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy code:", err);
-    }
-  };
 
   if (error) {
     return (
@@ -80,15 +69,7 @@ export function RoomPage(props: {
           <p className={styles.value}>{room.owner}</p>
         </div>
 
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Room Code</h2>
-          <div className={styles.codeContainer}>
-            <p className={styles.code}>{room.code}</p>
-            <Button onClick={handleCopyCode}>
-              {copied ? "Copied!" : "Copy"}
-            </Button>
-          </div>
-        </div>
+        <CopyableText label="Room Code" text={room.code} />
 
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Guests</h2>

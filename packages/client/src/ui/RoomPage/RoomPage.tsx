@@ -1,26 +1,37 @@
-import { Dispatch, useState } from "react";
+import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
 import { RoomState } from "@cow-sunday/protocol";
 import { GameService } from "../../services/game/GameService";
 import { Button } from "../common/Button/Button";
+import { Loading } from "../common/Loading/Loading";
 import styles from "./RoomPage.module.css";
 
 export function RoomPage(props: {
   gameService: GameService;
+  roomId: string;
   navigate: Dispatch<NavigationAction>;
 }) {
   const [copied, setCopied] = useState(false);
+  const [room, setRoom] = useState<RoomState>();
+  const [error, setError] = useState<string>();
 
-  // TODO: Replace with actual room data fetched based on roomId
-  const room: RoomState = {
-    id: "room-123",
-    owner: "Alice",
-    code: "ABC123",
-    guests: ["Bob", "Charlie", "Diana"],
-    activeSession: { kind: "RoomNoSession" },
-  };
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const roomData = await props.gameService.getRoom(props.roomId);
+        setRoom(roomData);
+        setError(undefined);
+      } catch (err) {
+        console.error("Failed to fetch room:", err);
+        setError(err instanceof Error ? err.message : "Failed to load room");
+      }
+    };
+
+    fetchRoom();
+  }, [props.gameService, props.roomId]);
 
   const handleCopyCode = async () => {
+    if (!room) return;
     try {
       await navigator.clipboard.writeText(room.code);
       setCopied(true);
@@ -29,6 +40,30 @@ export function RoomPage(props: {
       console.error("Failed to copy code:", err);
     }
   };
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <h1 className={styles.title}>Error</h1>
+          <p className={styles.error}>{error}</p>
+          <div className={styles.actions}>
+            <Button onClick={() => props.navigate({ type: "NavigateToRooms" })}>
+              Back to Rooms
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!room) {
+    return (
+      <div className={styles.container}>
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

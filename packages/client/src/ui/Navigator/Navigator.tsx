@@ -28,7 +28,13 @@ export function Navigator(props: {
     case "Rooms":
       return <RoomsPage gameService={props.gameService} navigate={dispatch} />;
     case "Room":
-      return <RoomPage gameService={props.gameService} navigate={dispatch} />;
+      return (
+        <RoomPage
+          gameService={props.gameService}
+          roomId={state.currentView.roomId}
+          navigate={dispatch}
+        />
+      );
     case "GameSessions":
       return (
         <GameSessionsPage

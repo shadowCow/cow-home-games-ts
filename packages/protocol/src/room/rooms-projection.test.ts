@@ -1,6 +1,10 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { roomsProjectionInitialState, roomsProjectionReducer, RoomsProjection } from "./rooms-projection";
+import {
+  roomsProjectionInitialState,
+  roomsProjectionReducer,
+  RoomsProjection,
+} from "./rooms-projection";
 import type { RoomState } from "./room";
 import type { CollectionEvent } from "../fst/fst-collection";
 
@@ -26,6 +30,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-1",
           initialState: {
+            id: "room-1",
             owner: "alice",
             code: "ABC123",
             guests: [],
@@ -56,6 +61,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-3",
           initialState: {
+            id: "room-3",
             owner: "charlie",
             code: "XYZ789",
             guests: ["dave"],
@@ -83,6 +89,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-2",
           initialState: {
+            id: "room-2",
             owner: "bob",
             code: "CODE",
             guests: [],
@@ -231,6 +238,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-1",
           initialState: {
+            id: "room-1",
             owner: "alice",
             code: "CODE1",
             guests: [],
@@ -244,6 +252,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-2",
           initialState: {
+            id: "room-2",
             owner: "bob",
             code: "CODE2",
             guests: [],
@@ -264,6 +273,7 @@ describe("RoomsProjection", () => {
           entityType: "Room",
           id: "room-3",
           initialState: {
+            id: "room-3",
             owner: "charlie",
             code: "CODE3",
             guests: [],

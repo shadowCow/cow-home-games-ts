@@ -24,6 +24,14 @@ export function RoomsPage(props: { navigate: Dispatch<NavigationAction> }) {
     setRooms(hardcodedRooms);
   }, []);
 
+  const handleSelectRoom = (index: number) => {
+    setSelectedIndex(index);
+    if (rooms) {
+      const room = rooms.rooms[index];
+      props.navigate({ type: "NavigateToRoom", roomId: room.entityId });
+    }
+  };
+
   return (
     <div className={styles.container}>
       {rooms === undefined ? (
@@ -38,7 +46,7 @@ export function RoomsPage(props: { navigate: Dispatch<NavigationAction> }) {
             </div>
           )}
           selectedIndex={selectedIndex}
-          onSelectItem={setSelectedIndex}
+          onSelectItem={handleSelectRoom}
         />
       )}
     </div>

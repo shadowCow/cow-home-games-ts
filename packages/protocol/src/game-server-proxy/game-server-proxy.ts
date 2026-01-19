@@ -211,7 +211,13 @@ export function createGameServerProxy(
       const roomFollower = createRoomFollower(initialRoomState);
       roomStore = createProjectionStore(roomFollower);
 
-      // TODO: Send subscription message to server
+      // Send subscription request to server
+      const subscribeMessage = {
+        kind: "SubscribeRoom",
+        clientId,
+        roomId,
+      };
+      channel.send(JSON.stringify(subscribeMessage), "");
 
       return roomStore.subscribe(callback);
     },

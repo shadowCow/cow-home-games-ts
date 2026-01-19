@@ -317,7 +317,17 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should subscribe to individual room and receive room state", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+
+    // Create server with broadcast callback
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
 
     // Add a room to the server
     server.handleMessage({
@@ -338,9 +348,6 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Act
     const unsubscribe = proxy.subscribeToRoom("room1", tracker.callback);
-
-    // TODO: Send room subscription message to server
-    // TODO: Server should send room state snapshot
 
     // Assert
     await waitFor(() => tracker.getCallCount() > 0);

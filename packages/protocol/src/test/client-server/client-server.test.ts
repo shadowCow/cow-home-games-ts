@@ -54,6 +54,25 @@ function createChannelPair(): {
   return { clientChannel, serverChannel };
 }
 
+/**
+ * Wires up a GameServer to its channel for bidirectional communication.
+ */
+function connectServerToChannel(
+  server: ReturnType<typeof createGameServer>,
+  channel: JsonMessageChannel
+): void {
+  // Server receives messages from the channel and processes them
+  channel.onMessage((messageString: string) => {
+    try {
+      const message = JSON.parse(messageString);
+      const response = server.handleMessage(message);
+      // Response handling could be added here if needed
+    } catch (error) {
+      console.error("Error processing server message:", error);
+    }
+  });
+}
+
 // ========================================
 // Test Helpers
 // ========================================
@@ -107,16 +126,23 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should connect client to server and receive initial empty rooms projection", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
-    const proxy = createGameServerProxy(clientChannel);
 
+    // Create server with broadcast callback that sends messages to server channel
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
+
+    const proxy = createGameServerProxy(clientChannel);
     const tracker = createCallbackTracker<RoomsProjection>();
 
     // Act
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
-
-    // TODO: Send subscribe message to server
-    // TODO: Server should send snapshot to client
 
     // Assert
     await waitFor(() => tracker.getCallCount() > 0);
@@ -131,7 +157,17 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should receive rooms projection with existing rooms on subscription", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+
+    // Create server with broadcast callback
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
 
     // Add some rooms to the server before client subscribes
     server.handleMessage({
@@ -166,9 +202,6 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Act
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
-    // TODO: Send subscribe message to server
-    // TODO: Server should send snapshot with 2 rooms
-
     // Assert
     await waitFor(() => tracker.getCallCount() > 0);
     const projection = tracker.getLastValue();
@@ -183,13 +216,24 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should receive room added event when new room is created", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+
+    // Create server with broadcast callback
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
+
     const proxy = createGameServerProxy(clientChannel);
 
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
-    // TODO: Subscribe and wait for initial snapshot
+    // Wait for initial snapshot
     await waitFor(() => tracker.getCallCount() > 0);
 
     // Act
@@ -205,8 +249,6 @@ describe("GameServerProxy - Client-Server Communication", () => {
         activeSession: { kind: "RoomNoSession" },
       },
     });
-
-    // TODO: Server should broadcast EntityAdded event to all subscribed clients
 
     // Assert
     await waitFor(() => tracker.getCallCount() > 1);

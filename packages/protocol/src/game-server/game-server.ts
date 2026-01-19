@@ -138,19 +138,31 @@ export function createGameServer(config: GameServerConfig): GameServer {
   };
 
   const syncClient = (clientId: string): void => {
-    // Serialize the current state as a snapshot
-    const snapshot = state.rooms.getSnapshot();
+    // Get the current collection state
+    const collectionSnapshot = state.rooms.getSnapshot();
 
-    // Only send snapshot if there's state to sync (index > 0 or has entities)
-    const hasState =
-      snapshot.lastAppliedIndex > 0 ||
-      Object.keys(snapshot.state.entities).length > 0;
+    // Build RoomsProjection from collection state
+    const roomsProjection: RoomsProjection = {
+      kind: "RoomsProjection",
+      rooms: Object.entries(collectionSnapshot.state.entities).map(
+        ([roomId, roomFst]) => {
+          const roomState = roomFst.getState();
+          return {
+            entityId: roomId,
+            roomOwner: roomState.owner,
+          };
+        }
+      ),
+    };
 
-    if (!hasState) {
-      return; // Client is already in sync with empty state
-    }
+    // Create snapshot message
+    const snapshotMessage: GameServerOutgoingMessage = {
+      kind: "Snapshot",
+      state: roomsProjection,
+      lastAppliedIndex: collectionSnapshot.lastAppliedIndex,
+    };
 
-    // TODO send appropriate snapshot
+    sendToClient(snapshotMessage, clientId);
   };
 
   // Helper to send to specific client

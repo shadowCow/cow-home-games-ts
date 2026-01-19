@@ -47,6 +47,9 @@ export type GameServerProxy = {
 export function createGameServerProxy(
   channel: JsonMessageChannel
 ): GameServerProxy {
+  // Generate a unique client ID for this proxy
+  const clientId = `client-${Math.random().toString(36).substring(2, 11)}`;
+
   // Create FstFollower with the roomsProjectionReducer for rooms list
   const roomsFollower = createFstFollower<
     RoomsProjection,
@@ -166,6 +169,14 @@ export function createGameServerProxy(
     subscribeToRooms(
       callback: (projection: RoomsProjection) => void
     ): () => void {
+      // Send subscription request to server
+      const subscribeMessage = {
+        kind: "SubscribeRooms",
+        clientId,
+      };
+      channel.send(JSON.stringify(subscribeMessage), "");
+
+      // Subscribe to the rooms store
       return roomsStore.subscribe(callback);
     },
 

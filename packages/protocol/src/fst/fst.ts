@@ -6,7 +6,7 @@ import { z } from "zod";
 // ========================================
 
 export const IndexedEvent = <TEvent extends z.ZodTypeAny>(
-  eventSchema: TEvent
+  eventSchema: TEvent,
 ) =>
   z.object({
     kind: z.literal("IndexedEvent"),
@@ -35,7 +35,7 @@ export type Snapshot<TState> = {
 
 export function createSnapshot<TState>(
   state: TState,
-  lastAppliedIndex?: number
+  lastAppliedIndex?: number,
 ): Snapshot<TState> {
   return {
     kind: "Snapshot",
@@ -63,7 +63,7 @@ export type FstLeader<TState, TCommand, TEvent, TError> = {
 export type CommandHandler<TState, TCommand, TEvent, TError, TContext> = (
   s: TState,
   c: TCommand,
-  ctx: TContext
+  ctx: TContext,
 ) => Result<TEvent, TError>;
 
 export type Reducer<TState, TEvent> = (s: TState, e: TEvent) => TState;
@@ -72,7 +72,7 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
   commandHandler: CommandHandler<TState, TCommand, TEvent, TError, TContext>,
   reducer: Reducer<TState, TEvent>,
   ctx: TContext,
-  snapshot: Snapshot<TState>
+  snapshot: Snapshot<TState>,
 ): FstLeader<TState, TCommand, TEvent, TError> {
   let state = snapshot.state;
   let currentIndex = snapshot.lastAppliedIndex;
@@ -104,7 +104,7 @@ export function createFstLeader<TState, TCommand, TEvent, TError, TContext>(
     },
 
     handleCommand: function (
-      c: TCommand
+      c: TCommand,
     ): Result<IndexedEvent<TEvent>, TError> {
       const result = commandHandler(state, c, ctx);
 
@@ -139,7 +139,7 @@ export type FstFollower<TState, TEvent> = {
 
 export function createFstFollower<TState, TEvent>(
   reducer: Reducer<TState, TEvent>,
-  initialSnapshot: Snapshot<TState>
+  initialSnapshot: Snapshot<TState>,
 ): FstFollower<TState, TEvent> {
   let state = initialSnapshot.state;
   let lastAppliedIndex = initialSnapshot.lastAppliedIndex;
@@ -187,15 +187,20 @@ export function createFstFollower<TState, TEvent>(
     },
 
     applySnapshot: function (
-      snapshot: Snapshot<TState>
+      snapshot: Snapshot<TState>,
     ): Result<void, SyncError> {
       // Only apply if snapshot is more recent
-      if (snapshot.lastAppliedIndex <= lastAppliedIndex) {
+      if (snapshot.lastAppliedIndex < lastAppliedIndex) {
         return err({
           kind: "StaleSnapshot" as const,
           snapshotIndex: snapshot.lastAppliedIndex,
           lastAppliedIndex,
         });
+      }
+
+      // if the snapshot is the same version we are, that's fine, do nothing
+      if (snapshot.lastAppliedIndex === lastAppliedIndex) {
+        return ok(undefined);
       }
 
       state = snapshot.state;

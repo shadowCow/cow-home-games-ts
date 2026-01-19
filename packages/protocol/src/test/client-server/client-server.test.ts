@@ -364,7 +364,17 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should receive room state updates when guest joins", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+
+    // Create server with broadcast callback
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
 
     // Add a room
     server.handleMessage({
@@ -384,7 +394,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     const tracker = createCallbackTracker<RoomState>();
     const unsubscribe = proxy.subscribeToRoom("room1", tracker.callback);
 
-    // TODO: Wait for initial room state
+    // Wait for initial room state
     await waitFor(() => tracker.getCallCount() > 0);
     assert.equal(tracker.getLastValue()?.guests.length, 0);
 
@@ -400,8 +410,6 @@ describe("GameServerProxy - Client-Server Communication", () => {
         code: "ABC123",
       },
     });
-
-    // TODO: Server should send EntityUpdated event with GuestJoined
 
     // Assert
     await waitFor(() => {

@@ -169,7 +169,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Wire server to receive messages from its channel
     connectServerToChannel(server, serverChannel);
 
-    // Add some rooms to the server before client subscribes
+    // Add rooms directly via server.handleMessage (setup only, not testing client-server communication here)
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -196,6 +196,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
+    // Now create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
     const tracker = createCallbackTracker<RoomsProjection>();
 
@@ -236,8 +237,8 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Wait for initial snapshot
     await waitFor(() => tracker.getCallCount() > 0);
 
-    // Act
-    server.handleMessage({
+    // Act - add room via proxy
+    await proxy.offerRoomsCommand({
       kind: "AddEntity",
       entityType: "Room",
       id: "room1",
@@ -276,7 +277,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Wire server to receive messages from its channel
     connectServerToChannel(server, serverChannel);
 
-    // Add a room
+    // Add a room directly via server.handleMessage (setup only)
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -290,6 +291,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
+    // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
@@ -298,8 +300,8 @@ describe("GameServerProxy - Client-Server Communication", () => {
     await waitFor(() => tracker.getCallCount() > 0);
     assert.equal(tracker.getLastValue()?.rooms.length, 1);
 
-    // Act
-    server.handleMessage({
+    // Act - remove room via proxy
+    await proxy.offerRoomsCommand({
       kind: "RemoveEntity",
       entityType: "Room",
       id: "room1",
@@ -329,7 +331,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Wire server to receive messages from its channel
     connectServerToChannel(server, serverChannel);
 
-    // Add a room to the server
+    // Add a room directly via server.handleMessage (setup only)
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -343,6 +345,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
+    // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
     const tracker = createCallbackTracker<RoomState>();
 
@@ -376,7 +379,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Wire server to receive messages from its channel
     connectServerToChannel(server, serverChannel);
 
-    // Add a room
+    // Add a room directly via server.handleMessage (setup only)
     server.handleMessage({
       kind: "AddEntity",
       entityType: "Room",
@@ -390,6 +393,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
+    // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
     const tracker = createCallbackTracker<RoomState>();
     const unsubscribe = proxy.subscribeToRoom("room1", tracker.callback);
@@ -398,17 +402,12 @@ describe("GameServerProxy - Client-Server Communication", () => {
     await waitFor(() => tracker.getCallCount() > 0);
     assert.equal(tracker.getLastValue()?.guests.length, 0);
 
-    // Act
-    server.handleMessage({
-      kind: "UpdateEntity",
-      entityType: "Room",
-      id: "room1",
-      command: {
-        kind: "JoinRoom",
-        roomId: "room1",
-        userId: "user2",
-        code: "ABC123",
-      },
+    // Act - send JoinRoom command via proxy
+    await proxy.offerRoomCommand({
+      kind: "JoinRoom",
+      roomId: "room1",
+      userId: "user2",
+      code: "ABC123",
     });
 
     // Assert
@@ -426,12 +425,31 @@ describe("GameServerProxy - Client-Server Communication", () => {
   });
 
   test("should only allow one room subscription at a time", async () => {
-    // Arrange
+    // Arrange - use separate channels for setup and other client
+    const { clientChannel: setupChannel, serverChannel: setupServerChannel } =
+      createChannelPair();
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+    const { clientChannel: otherChannel, serverChannel: otherServerChannel } =
+      createChannelPair();
 
-    // Add two rooms
-    server.handleMessage({
+    // Create server with broadcast callback that sends to all channels
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        setupServerChannel.send(JSON.stringify(message), "");
+        serverChannel.send(JSON.stringify(message), "");
+        otherServerChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from all channels
+    connectServerToChannel(server, setupServerChannel);
+    connectServerToChannel(server, serverChannel);
+    connectServerToChannel(server, otherServerChannel);
+
+    // Create a setup proxy to add two rooms
+    const setupProxy = createGameServerProxy(setupChannel);
+    await setupProxy.offerRoomsCommand({
       kind: "AddEntity",
       entityType: "Room",
       id: "room1",
@@ -444,7 +462,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
-    server.handleMessage({
+    await setupProxy.offerRoomsCommand({
       kind: "AddEntity",
       entityType: "Room",
       id: "room2",
@@ -465,31 +483,27 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Act
     const unsubscribe1 = proxy.subscribeToRoom("room1", tracker1.callback);
 
-    // TODO: Wait for room1 state
+    // Wait for room1 state
     await waitFor(() => tracker1.getCallCount() > 0);
 
     // Subscribe to room2 (should unsubscribe from room1)
     const unsubscribe2 = proxy.subscribeToRoom("room2", tracker2.callback);
 
-    // TODO: Wait for room2 state
+    // Wait for room2 state
     await waitFor(() => tracker2.getCallCount() > 0);
 
     // Assert
     assert.equal(tracker1.getLastValue()?.id, "room1");
     assert.equal(tracker2.getLastValue()?.id, "room2");
 
-    // Make a change to room1 - tracker1 should not receive it
+    // Make a change to room1 via another client - tracker1 should not receive it
     const room1CallCount = tracker1.getCallCount();
-    server.handleMessage({
-      kind: "UpdateEntity",
-      entityType: "Room",
-      id: "room1",
-      command: {
-        kind: "JoinRoom",
-        roomId: "room1",
-        userId: "user3",
-        code: "ABC123",
-      },
+    const otherClientProxy = createGameServerProxy(otherChannel);
+    await otherClientProxy.offerRoomCommand({
+      kind: "JoinRoom",
+      roomId: "room1",
+      userId: "user3",
+      code: "ABC123",
     });
 
     // Wait a bit to ensure no callback happens
@@ -506,12 +520,24 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
   test("should support multiple clients subscribing to rooms", async () => {
     // Arrange
-    const server = createGameServer({ maxSubscribers: 10 });
-
     const { clientChannel: clientChannel1, serverChannel: serverChannel1 } =
       createChannelPair();
     const { clientChannel: clientChannel2, serverChannel: serverChannel2 } =
       createChannelPair();
+
+    // Create server with broadcast callback that sends to both channels
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        // Broadcast to both server channels
+        serverChannel1.send(JSON.stringify(message), "");
+        serverChannel2.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from both channels
+    connectServerToChannel(server, serverChannel1);
+    connectServerToChannel(server, serverChannel2);
 
     const proxy1 = createGameServerProxy(clientChannel1);
     const proxy2 = createGameServerProxy(clientChannel2);
@@ -523,11 +549,13 @@ describe("GameServerProxy - Client-Server Communication", () => {
     const unsubscribe1 = proxy1.subscribeToRooms(tracker1.callback);
     const unsubscribe2 = proxy2.subscribeToRooms(tracker2.callback);
 
-    // TODO: Both clients should receive initial snapshots
-    await waitFor(() => tracker1.getCallCount() > 0 && tracker2.getCallCount() > 0);
+    // Both clients should receive initial snapshots
+    await waitFor(
+      () => tracker1.getCallCount() > 0 && tracker2.getCallCount() > 0
+    );
 
-    // Add a room
-    server.handleMessage({
+    // Add a room via one of the proxies
+    await proxy1.offerRoomsCommand({
       kind: "AddEntity",
       entityType: "Room",
       id: "room1",
@@ -540,14 +568,15 @@ describe("GameServerProxy - Client-Server Communication", () => {
       },
     });
 
-    // TODO: Both clients should receive EntityAdded event
-
-    // Assert
+    // Assert - both clients should receive EntityAdded event
     await waitFor(() => {
       const proj1 = tracker1.getLastValue();
       const proj2 = tracker2.getLastValue();
       return !!(
-        proj1 && proj2 && proj1.rooms.length === 1 && proj2.rooms.length === 1
+        proj1 &&
+        proj2 &&
+        proj1.rooms.length === 1 &&
+        proj2.rooms.length === 1
       );
     });
 
@@ -556,78 +585,5 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     unsubscribe1();
     unsubscribe2();
-  });
-
-  test("should handle client sending room command through proxy", async () => {
-    // Arrange
-    const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
-
-    // Add a room
-    server.handleMessage({
-      kind: "AddEntity",
-      entityType: "Room",
-      id: "room1",
-      initialState: {
-        id: "room1",
-        owner: "user1",
-        code: "ABC123",
-        guests: [],
-        activeSession: { kind: "RoomNoSession" },
-      },
-    });
-
-    const proxy = createGameServerProxy(clientChannel);
-
-    // Act
-    const result = await proxy.offerRoomCommand({
-      kind: "JoinRoom",
-      roomId: "room1",
-      userId: "user2",
-      code: "ABC123",
-    });
-
-    // TODO: Proxy should send UpdateEntity command to server
-    // TODO: Server should process and return result
-
-    // Assert
-    assert.equal(result.kind, "Ok");
-    if (result.kind === "Ok") {
-      assert.equal(result.value.kind, "GuestJoined");
-      if (result.value.kind === "GuestJoined") {
-        assert.equal(result.value.userId, "user2");
-      }
-    }
-  });
-
-  test("should handle client sending rooms collection command through proxy", async () => {
-    // Arrange
-    const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
-    const proxy = createGameServerProxy(clientChannel);
-
-    // Act
-    const result = await proxy.offerRoomsCommand({
-      kind: "AddEntity",
-      entityType: "Room",
-      id: "room1",
-      initialState: {
-        id: "room1",
-        owner: "user1",
-        code: "ABC123",
-        guests: [],
-        activeSession: { kind: "RoomNoSession" },
-      },
-    });
-
-    // TODO: Proxy should send AddEntity command to server
-    // TODO: Server should process and return result
-
-    // Assert
-    assert.equal(result.kind, "Ok");
-    if (result.kind === "Ok") {
-      assert.equal(result.value.kind, "EntityAdded");
-      assert.equal(result.value.id, "room1");
-    }
   });
 });

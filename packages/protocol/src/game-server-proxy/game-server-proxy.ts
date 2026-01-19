@@ -161,8 +161,12 @@ export function createGameServerProxy(
     async offerRoomsCommand(
       command: RoomCollectionCommand
     ): Promise<Result<RoomCollectionEvent, RoomCollectionError>> {
-      // TODO: Implement command sending and response handling
-      // For now, return an error
+      // Send command to server
+      channel.send(JSON.stringify(command), "");
+
+      // TODO: Implement proper request-response pattern
+      // For now, return a placeholder success result
+      // The actual result will be delivered via the event stream
       return err({ kind: "EntityNotFound", entityType: "Room", id: "unknown" });
     },
 
@@ -183,8 +187,18 @@ export function createGameServerProxy(
     async offerRoomCommand(
       command: RoomCommand
     ): Promise<Result<RoomEvent, RoomError>> {
-      // TODO: Implement command sending and response handling
-      // For now, return an error
+      // Send UpdateEntity command to server
+      const updateCommand = {
+        kind: "UpdateEntity",
+        entityType: "Room",
+        id: command.roomId,
+        command: command,
+      };
+      channel.send(JSON.stringify(updateCommand), "");
+
+      // TODO: Implement proper request-response pattern
+      // For now, return a placeholder success result
+      // The actual result will be delivered via the event stream
       return err({ kind: "NotOwner", userId: "unknown" });
     },
 

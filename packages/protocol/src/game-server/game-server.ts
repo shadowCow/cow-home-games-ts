@@ -9,7 +9,6 @@ import {
 } from "../room/room-collection";
 import { ValidationFailure } from "../common/validation";
 import { IndexedEvent, Snapshot } from "../fst/fst";
-import { GameClientMessage } from "../game-client/game-client";
 import { RoomsProjection } from "../room/rooms-projection";
 
 // ========================================
@@ -91,7 +90,7 @@ export type GameServerState = {
 // ========================================
 
 export type BroadcastCallback = (
-  message: GameClientMessage,
+  message: GameServerOutgoingMessage,
   clientId: string
 ) => void;
 
@@ -102,10 +101,7 @@ export type BroadcastCallback = (
 export type GameServer = {
   handleMessage(message: any): ValidationFailure | GameServerResponse;
   getState(): Readonly<GameServerState>;
-  registerClient(clientId: string): void;
-  unregisterClient(clientId: string): void;
   getConnectedClients(): string[];
-  syncClient(clientId: string): void;
 };
 
 export type GameServerConfig = {
@@ -125,7 +121,7 @@ export function createGameServer(config: GameServerConfig): GameServer {
   const connectedClients = new Set<string>();
 
   // Helper to broadcast to all clients
-  const broadcast = (message: GameClientMessage): void => {
+  const broadcast = (message: GameServerOutgoingMessage): void => {
     if (!onBroadcast) return;
 
     for (const clientId of connectedClients) {
@@ -133,8 +129,35 @@ export function createGameServer(config: GameServerConfig): GameServer {
     }
   };
 
+  const registerClient = (clientId: string): void => {
+    connectedClients.add(clientId);
+  };
+
+  const unregisterClient = (clientId: string): void => {
+    connectedClients.delete(clientId);
+  };
+
+  const syncClient = (clientId: string): void => {
+    // Serialize the current state as a snapshot
+    const snapshot = state.rooms.getSnapshot();
+
+    // Only send snapshot if there's state to sync (index > 0 or has entities)
+    const hasState =
+      snapshot.lastAppliedIndex > 0 ||
+      Object.keys(snapshot.state.entities).length > 0;
+
+    if (!hasState) {
+      return; // Client is already in sync with empty state
+    }
+
+    // TODO send appropriate snapshot
+  };
+
   // Helper to send to specific client
-  const sendToClient = (message: GameClientMessage, clientId: string): void => {
+  const sendToClient = (
+    message: GameServerOutgoingMessage,
+    clientId: string
+  ): void => {
     if (!onBroadcast) return;
     onBroadcast(message, clientId);
   };
@@ -162,11 +185,7 @@ export function createGameServer(config: GameServerConfig): GameServer {
 
           // If command succeeded, broadcast the event to all clients
           if (result.kind === "Ok") {
-            const eventMessage: GameClientMessage = {
-              kind: "RoomCollectionEvent",
-              event: result.value,
-            };
-            broadcast(eventMessage);
+            broadcast(result.value);
           }
 
           return {
@@ -186,8 +205,8 @@ export function createGameServer(config: GameServerConfig): GameServer {
           }
 
           // Register client and sync current state
-          this.registerClient(validatedMessage.clientId);
-          this.syncClient(validatedMessage.clientId);
+          registerClient(validatedMessage.clientId);
+          syncClient(validatedMessage.clientId);
 
           return {
             kind: "SubscribeRoomsAccepted",
@@ -197,7 +216,7 @@ export function createGameServer(config: GameServerConfig): GameServer {
 
         case "UnsubscribeRooms": {
           // Unregister client
-          this.unregisterClient(validatedMessage.clientId);
+          unregisterClient(validatedMessage.clientId);
 
           // Return a validation failure for now (unsubscription is handled via side effects)
           return {
@@ -212,47 +231,8 @@ export function createGameServer(config: GameServerConfig): GameServer {
       return state;
     },
 
-    registerClient(clientId: string): void {
-      connectedClients.add(clientId);
-    },
-
-    unregisterClient(clientId: string): void {
-      connectedClients.delete(clientId);
-    },
-
     getConnectedClients(): string[] {
       return Array.from(connectedClients);
-    },
-
-    syncClient(clientId: string): void {
-      // Serialize the current state as a snapshot
-      const snapshot = state.rooms.getSnapshot();
-
-      // Only send snapshot if there's state to sync (index > 0 or has entities)
-      const hasState =
-        snapshot.lastAppliedIndex > 0 ||
-        Object.keys(snapshot.state.entities).length > 0;
-
-      if (!hasState) {
-        return; // Client is already in sync with empty state
-      }
-
-      const serializedSnapshot = {
-        entities: Object.fromEntries(
-          Object.entries(snapshot.state.entities).map(([roomId, fst]) => [
-            roomId,
-            fst.getSnapshot(),
-          ])
-        ),
-        lastAppliedIndex: snapshot.lastAppliedIndex,
-      };
-
-      const snapshotMessage: GameClientMessage = {
-        kind: "RoomCollectionSnapshot",
-        snapshot: serializedSnapshot,
-      };
-
-      sendToClient(snapshotMessage, clientId);
     },
   };
 }

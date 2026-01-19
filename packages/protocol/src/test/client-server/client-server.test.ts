@@ -264,7 +264,17 @@ describe("GameServerProxy - Client-Server Communication", () => {
   test("should receive room removed event when room is deleted", async () => {
     // Arrange
     const { clientChannel, serverChannel } = createChannelPair();
-    const server = createGameServer({ maxSubscribers: 10 });
+
+    // Create server with broadcast callback
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    // Wire server to receive messages from its channel
+    connectServerToChannel(server, serverChannel);
 
     // Add a room
     server.handleMessage({
@@ -284,7 +294,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
-    // TODO: Subscribe and wait for initial snapshot with 1 room
+    // Wait for initial snapshot with 1 room
     await waitFor(() => tracker.getCallCount() > 0);
     assert.equal(tracker.getLastValue()?.rooms.length, 1);
 
@@ -294,8 +304,6 @@ describe("GameServerProxy - Client-Server Communication", () => {
       entityType: "Room",
       id: "room1",
     });
-
-    // TODO: Server should broadcast EntityRemoved event
 
     // Assert
     await waitFor(() => {

@@ -1,8 +1,10 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyJwt from '@fastify/jwt';
+import fastifyWebsocket from '@fastify/websocket';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createGameServer } from '@cow-sunday/protocol';
 import { AuthGatewayJwt } from './auth/AuthGatewayJwt';
 import { registerAuthRoutes } from './auth/AuthApi';
 import { UserRepoFs } from './user-repo/UserRepoFs';
@@ -27,6 +29,24 @@ await fastify.register(fastifyJwt, {
   secret: 'supersecretkey' // TODO: Move to environment variable
 });
 
+// Register WebSocket plugin
+await fastify.register(fastifyWebsocket);
+
+// Create GameServer instance
+const gameServer = createGameServer({
+  maxSubscribers: 1000,
+  onBroadcast: (message, clientId) => {
+    // Find the client's WebSocket and send the message
+    const connection = clientConnections.get(clientId);
+    if (connection) {
+      connection.socket.send(JSON.stringify(message));
+    }
+  }
+});
+
+// Track WebSocket connections by client ID
+const clientConnections = new Map<string, { socket: any }>();
+
 // Wire up dependencies
 const userRepo: UserRepo = config.useInMemoryUsers
   ? new UserRepoInMemory()
@@ -49,6 +69,48 @@ registerRoomRoutes(fastify, roomRepo);
 // API routes
 fastify.get('/api/hello', async () => {
   return { message: 'Hello from Cow Home Games server!' };
+});
+
+// WebSocket endpoint for game server communication
+fastify.register(async (fastify) => {
+  fastify.get('/ws/game', { websocket: true }, (socket, _req) => {
+    // Generate a unique client ID for this connection
+    const clientId = `client-${Math.random().toString(36).substring(2, 11)}`;
+
+    fastify.log.info(`WebSocket client connected: ${clientId}`);
+
+    // Store the connection
+    clientConnections.set(clientId, { socket });
+
+    // Handle incoming messages from client
+    socket.on('message', (messageBuffer: Buffer) => {
+      try {
+        const messageString = messageBuffer.toString();
+        const message = JSON.parse(messageString);
+
+        // Forward message to GameServer
+        const response = gameServer.handleMessage(message);
+
+        // Optionally send response back to client
+        // (Note: Most communication happens via broadcast callback)
+        if (response && response.kind !== 'ValidationFailure') {
+          socket.send(JSON.stringify(response));
+        }
+      } catch (error) {
+        fastify.log.error({ error }, 'Error processing WebSocket message');
+      }
+    });
+
+    // Clean up on disconnect
+    socket.on('close', () => {
+      fastify.log.info(`WebSocket client disconnected: ${clientId}`);
+      clientConnections.delete(clientId);
+    });
+
+    socket.on('error', (error: Error) => {
+      fastify.log.error({ error }, `WebSocket error for client ${clientId}`);
+    });
+  });
 });
 
 // Serve static files from the client build

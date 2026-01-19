@@ -2,7 +2,6 @@
 export type View =
   | { kind: "Rooms" }
   | { kind: "Room"; roomId: string }
-  | { kind: "GameSessions" }
   | { kind: "Games" }
   | { kind: "GameSessionBuilder"; selectedGameName: string }
   | { kind: "GameSession"; sessionId: string };
@@ -16,7 +15,6 @@ export type NavigationState = {
 export type NavigationAction =
   | { type: "NavigateToRooms" }
   | { type: "NavigateToRoom"; roomId: string }
-  | { type: "NavigateToGameSessions" }
   | { type: "NavigateToGames" }
   | { type: "NavigateToGameSessionBuilder"; selectedGameName: string }
   | { type: "NavigateToGameSession"; sessionId: string };
@@ -31,8 +29,6 @@ export function navigationReducer(
       return { currentView: { kind: "Rooms" } };
     case "NavigateToRoom":
       return { currentView: { kind: "Room", roomId: action.roomId } };
-    case "NavigateToGameSessions":
-      return { currentView: { kind: "GameSessions" } };
     case "NavigateToGames":
       return { currentView: { kind: "Games" } };
     case "NavigateToGameSessionBuilder":

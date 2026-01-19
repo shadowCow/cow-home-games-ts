@@ -1,30 +1,21 @@
 import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
-import { RoomsProjection } from "@cow-sunday/protocol";
+import { GameServerProxy, RoomsProjection } from "@cow-sunday/protocol";
 import { GameService } from "../../services/game/GameService";
 import { List } from "../common/List/List";
 import { Loading } from "../common/Loading/Loading";
 import styles from "./RoomsPage.module.css";
 
 export function RoomsPage(props: {
-  gameService: GameService;
+  gameServerProxy: GameServerProxy;
   navigate: Dispatch<NavigationAction>;
 }) {
   const [rooms, setRooms] = useState<RoomsProjection>();
   const [selectedIndex, setSelectedIndex] = useState<number>();
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const roomsProjection = await props.gameService.listRooms();
-        setRooms(roomsProjection);
-      } catch (error) {
-        console.error("Failed to fetch rooms:", error);
-      }
-    };
-
-    fetchRooms();
-  }, [props.gameService]);
+    return props.gameServerProxy.subscribeToRooms((s) => setRooms(s));
+  }, [props.gameServerProxy]);
 
   const handleSelectRoom = (index: number) => {
     setSelectedIndex(index);

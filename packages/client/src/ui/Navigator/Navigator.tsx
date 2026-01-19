@@ -3,18 +3,18 @@ import { GameService } from "../../services/game/GameService";
 import { GameRegistry } from "../../games/GameRegistry";
 import { RoomsPage } from "../RoomsPage/RoomsPage";
 import { RoomPage } from "../RoomPage/RoomPage";
-import { GameSessionsPage } from "../GameSessionsPage/GameSessionsPage";
 import { GamesPage } from "../GamesPage/GamesPage";
 import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
-import { GameSessionPage } from "../GameSessionPage/GameSessionPage";
+import { GameSessionView } from "../GameSessionPage/GameSessionPage";
 import {
   navigationReducer,
   createInitialNavigationState,
   NavigationAction,
 } from "./navigationReducer";
+import { GameServerProxy } from "@cow-sunday/protocol";
 
 export function Navigator(props: {
-  gameService: GameService;
+  gameServerProxy: GameServerProxy;
   gameRegistry: GameRegistry;
 }) {
   const [state, dispatch] = useReducer(
@@ -26,41 +26,39 @@ export function Navigator(props: {
   // Render the current view
   switch (state.currentView.kind) {
     case "Rooms":
-      return <RoomsPage gameService={props.gameService} navigate={dispatch} />;
+      return (
+        <RoomsPage
+          gameServerProxy={props.gameServerProxy}
+          navigate={dispatch}
+        />
+      );
     case "Room":
       return (
         <RoomPage
-          gameService={props.gameService}
+          gameServerProxy={props.gameServerProxy}
           roomId={state.currentView.roomId}
           navigate={dispatch}
         />
       );
-    case "GameSessions":
-      return (
-        <GameSessionsPage
-          gameService={props.gameService}
-          navigate={dispatch}
-        />
-      );
-    case "Games":
-      return <GamesPage gameService={props.gameService} navigate={dispatch} />;
-    case "GameSessionBuilder":
-      return (
-        <GameSessionBuilderPage
-          gameService={props.gameService}
-          selectedGameName={state.currentView.selectedGameName}
-          navigate={dispatch}
-        />
-      );
-    case "GameSession":
-      return (
-        <GameSessionPage
-          gameService={props.gameService}
-          sessionId={state.currentView.sessionId}
-          gameRegistry={props.gameRegistry}
-          navigate={dispatch}
-        />
-      );
+    // case "Games":
+    //   return <GamesPage gameService={props.gameService} navigate={dispatch} />;
+    // case "GameSessionBuilder":
+    //   return (
+    //     <GameSessionBuilderPage
+    //       gameService={props.gameService}
+    //       selectedGameName={state.currentView.selectedGameName}
+    //       navigate={dispatch}
+    //     />
+    //   );
+    // case "GameSession":
+    //   return (
+    //     <GameSessionView
+    //       gameService={props.gameService}
+    //       sessionId={state.currentView.sessionId}
+    //       gameRegistry={props.gameRegistry}
+    //       navigate={dispatch}
+    //     />
+    //   );
     default:
       return null;
   }

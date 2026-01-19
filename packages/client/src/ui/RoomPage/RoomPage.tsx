@@ -1,50 +1,23 @@
 import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
-import { RoomState } from "@cow-sunday/protocol";
-import { GameService } from "../../services/game/GameService";
+import { GameServerProxy, RoomState } from "@cow-sunday/protocol";
 import { Button } from "../common/Button/Button";
 import { Loading } from "../common/Loading/Loading";
 import { CopyableText } from "../common/CopyableText/CopyableText";
 import styles from "./RoomPage.module.css";
 
 export function RoomPage(props: {
-  gameService: GameService;
+  gameServerProxy: GameServerProxy;
   roomId: string;
   navigate: Dispatch<NavigationAction>;
 }) {
   const [room, setRoom] = useState<RoomState>();
-  const [error, setError] = useState<string>();
 
   useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const roomData = await props.gameService.getRoom(props.roomId);
-        setRoom(roomData);
-        setError(undefined);
-      } catch (err) {
-        console.error("Failed to fetch room:", err);
-        setError(err instanceof Error ? err.message : "Failed to load room");
-      }
-    };
-
-    fetchRoom();
-  }, [props.gameService, props.roomId]);
-
-  if (error) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.content}>
-          <h1 className={styles.title}>Error</h1>
-          <p className={styles.error}>{error}</p>
-          <div className={styles.actions}>
-            <Button onClick={() => props.navigate({ type: "NavigateToRooms" })}>
-              Back to Rooms
-            </Button>
-          </div>
-        </div>
-      </div>
+    return props.gameServerProxy.subscribeToRoom(props.roomId, (s) =>
+      setRoom(s)
     );
-  }
+  }, [props.gameServerProxy, props.roomId]);
 
   if (!room) {
     return (

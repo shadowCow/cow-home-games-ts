@@ -2,13 +2,13 @@ import { useState } from "react";
 import { LoginPage } from "./LoginPage/LoginPage";
 import { Navigator } from "./Navigator/Navigator";
 import { AuthGateway } from "../services/auth/AuthGateway";
-import { GameService } from "../services/game/GameService";
 import { GameRegistry } from "../games/GameRegistry";
 import { User } from "../services/auth/User";
+import { GameServerProxy } from "@cow-sunday/protocol";
 
 function App(props: {
   authGateway: AuthGateway;
-  gameService: GameService;
+  gameServerProxy: GameServerProxy;
   gameRegistry: GameRegistry;
 }) {
   const [user, setUser] = useState<User | null>(null);
@@ -33,7 +33,7 @@ function App(props: {
 
   return (
     <Navigator
-      gameService={props.gameService}
+      gameServerProxy={props.gameServerProxy}
       gameRegistry={props.gameRegistry}
     />
   );

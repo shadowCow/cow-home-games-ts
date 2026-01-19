@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { createFstFollower } from "./fst";
+import { createFstFollower, Snapshot } from "./fst";
 import { createProjectionStore } from "./projection-store";
 
 // ========================================
@@ -29,7 +29,15 @@ function createCounterFollower(initialCount: number) {
     }
   };
 
-  return createFstFollower<CounterState, CounterEvent>(reducer, { count: initialCount });
+  const snapshot: Snapshot<CounterState> = {
+    kind: "Snapshot",
+    state: {
+      count: initialCount,
+    },
+    lastAppliedIndex: 0,
+  };
+
+  return createFstFollower<CounterState, CounterEvent>(reducer, snapshot);
 }
 
 // ========================================
@@ -266,7 +274,9 @@ describe("ProjectionStore", () => {
       const subscriber1States: number[] = [];
       const subscriber2States: number[] = [];
 
-      const unsubscribe1 = store.subscribe((state) => subscriber1States.push(state.count));
+      const unsubscribe1 = store.subscribe((state) =>
+        subscriber1States.push(state.count)
+      );
       store.subscribe((state) => subscriber2States.push(state.count));
 
       // Act

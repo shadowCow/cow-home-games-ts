@@ -5,6 +5,7 @@ import {
   RoomsProjection,
   roomsProjectionReducer,
   roomsProjectionInitialState,
+  roomsProjectionInitialSnapshot,
 } from "../room/rooms-projection";
 import {
   RoomState,
@@ -54,7 +55,7 @@ export function createGameServerProxy(
   const roomsFollower = createFstFollower<
     RoomsProjection,
     CollectionEvent<RoomState, RoomEvent>
-  >(roomsProjectionReducer, roomsProjectionInitialState());
+  >(roomsProjectionReducer, roomsProjectionInitialSnapshot());
 
   // Wrap follower in ProjectionStore for subscription management
   const roomsStore = createProjectionStore(roomsFollower);
@@ -62,6 +63,14 @@ export function createGameServerProxy(
   // Track subscribed room state
   let subscribedRoomId: string | undefined = undefined;
   let roomStore: ProjectionStore<RoomState, RoomEvent> | undefined = undefined;
+  const roomCallbacks = new Map<
+    number,
+    {
+      callback: (room: RoomState) => void;
+      unsubscribe?: () => void;
+    }
+  >();
+  let nextCallbackId = 0;
 
   // Handle incoming messages from the server
   channel.onMessage((messageString: string) => {
@@ -80,7 +89,9 @@ export function createGameServerProxy(
       switch (validatedMessage.kind) {
         case "Snapshot": {
           // Try to parse as RoomsProjection snapshot
-          const roomsProjectionParseResult = RoomsProjection.safeParse(validatedMessage.state);
+          const roomsProjectionParseResult = RoomsProjection.safeParse(
+            validatedMessage.state
+          );
           if (roomsProjectionParseResult.success) {
             const roomsSnapshot: Snapshot<RoomsProjection> = {
               kind: "Snapshot",
@@ -95,31 +106,52 @@ export function createGameServerProxy(
           }
 
           // Try to parse as RoomState snapshot (for subscribed room)
-          if (roomStore && subscribedRoomId) {
-            const roomStateParseResult = RoomState.safeParse(validatedMessage.state);
+          if (subscribedRoomId) {
+            const roomStateParseResult = RoomState.safeParse(
+              validatedMessage.state
+            );
             if (roomStateParseResult.success) {
               const roomSnapshot: Snapshot<RoomState> = {
                 kind: "Snapshot",
                 state: roomStateParseResult.data,
                 lastAppliedIndex: validatedMessage.lastAppliedIndex,
               };
-              const result = roomStore.applySnapshot(roomSnapshot);
-              if (result.kind === "Err") {
-                console.error("Failed to apply room snapshot:", result.value);
+
+              // Create roomStore if this is the first snapshot
+              if (!roomStore) {
+                const roomFollower = createRoomFollower(roomSnapshot);
+                roomStore = createProjectionStore(roomFollower);
+
+                // Subscribe all pending callbacks and store their unsubscribe functions
+                for (const [callbackId, entry] of roomCallbacks.entries()) {
+                  entry.unsubscribe = roomStore.subscribe(entry.callback);
+                }
+              } else {
+                // Apply snapshot to existing store
+                const result = roomStore.applySnapshot(roomSnapshot);
+                if (result.kind === "Err") {
+                  console.error("Failed to apply room snapshot:", result.value);
+                }
               }
               break;
             }
           }
 
-          console.error("Could not parse snapshot state as RoomsProjection or RoomState");
+          console.error(
+            "Could not parse snapshot state as RoomsProjection or RoomState"
+          );
           break;
         }
 
         case "IndexedEvent": {
           // Try to parse as collection event first
-          const collectionEventParseResult = RoomCollectionEvent.safeParse(validatedMessage.event);
+          const collectionEventParseResult = RoomCollectionEvent.safeParse(
+            validatedMessage.event
+          );
           if (collectionEventParseResult.success) {
-            const collectionIndexedEvent: IndexedEvent<CollectionEvent<RoomState, RoomEvent>> = {
+            const collectionIndexedEvent: IndexedEvent<
+              CollectionEvent<RoomState, RoomEvent>
+            > = {
               kind: "IndexedEvent",
               index: validatedMessage.index,
               event: collectionEventParseResult.data,
@@ -133,7 +165,9 @@ export function createGameServerProxy(
 
           // Try to parse as room event (for subscribed room)
           if (roomStore && subscribedRoomId) {
-            const roomEventParseResult = RoomEvent.safeParse(validatedMessage.event);
+            const roomEventParseResult = RoomEvent.safeParse(
+              validatedMessage.event
+            );
             if (roomEventParseResult.success) {
               const roomIndexedEvent: IndexedEvent<RoomEvent> = {
                 kind: "IndexedEvent",
@@ -148,7 +182,9 @@ export function createGameServerProxy(
             }
           }
 
-          console.error("Could not parse event as CollectionEvent or RoomEvent");
+          console.error(
+            "Could not parse event as CollectionEvent or RoomEvent"
+          );
           break;
         }
       }
@@ -210,20 +246,14 @@ export function createGameServerProxy(
       if (roomStore) {
         roomStore = undefined;
       }
+      roomCallbacks.clear();
 
       subscribedRoomId = roomId;
 
-      // Create initial room state (will be updated by snapshot from server)
-      const initialRoomState: RoomState = {
-        id: roomId,
-        owner: "",
-        code: "",
-        guests: [],
-        activeSession: { kind: "RoomNoSession" },
-      };
-
-      const roomFollower = createRoomFollower(initialRoomState);
-      roomStore = createProjectionStore(roomFollower);
+      // Add callback to pending list
+      const callbackId = nextCallbackId++;
+      const entry = { callback, unsubscribe: undefined };
+      roomCallbacks.set(callbackId, entry);
 
       // Send subscription request to server
       const subscribeMessage = {
@@ -233,7 +263,14 @@ export function createGameServerProxy(
       };
       channel.send(JSON.stringify(subscribeMessage), "");
 
-      return roomStore.subscribe(callback);
+      // Return unsubscribe function that works before and after store creation
+      return () => {
+        const entry = roomCallbacks.get(callbackId);
+        if (entry?.unsubscribe) {
+          entry.unsubscribe();
+        }
+        roomCallbacks.delete(callbackId);
+      };
     },
   };
 }

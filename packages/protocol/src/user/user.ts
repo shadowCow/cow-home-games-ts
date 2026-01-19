@@ -203,7 +203,7 @@ export function createUserLeader(
 }
 
 export function createUserFollower(
-  initialState: UserState
+  initialSnapshot: Snapshot<UserState>
 ): FstFollower<UserState, UserEvent> {
-  return createFstFollower(userReducer, initialState);
+  return createFstFollower(userReducer, initialSnapshot);
 }

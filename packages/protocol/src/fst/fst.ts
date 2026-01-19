@@ -139,10 +139,10 @@ export type FstFollower<TState, TEvent> = {
 
 export function createFstFollower<TState, TEvent>(
   reducer: Reducer<TState, TEvent>,
-  initialState: TState
+  initialSnapshot: Snapshot<TState>
 ): FstFollower<TState, TEvent> {
-  let state = initialState;
-  let lastAppliedIndex = 0;
+  let state = initialSnapshot.state;
+  let lastAppliedIndex = initialSnapshot.lastAppliedIndex;
 
   return {
     getState: function (): Readonly<TState> {

@@ -1,6 +1,12 @@
 import { ok, err, Result } from "@cow-sunday/fp-ts";
 import { z } from "zod";
-import { createFstLeader, createFstFollower, FstLeader, FstFollower, Snapshot } from "../fst/fst";
+import {
+  createFstLeader,
+  createFstFollower,
+  FstLeader,
+  FstFollower,
+  Snapshot,
+} from "../fst/fst";
 
 // ========================================
 // Room State
@@ -44,7 +50,11 @@ export const RoomState = z.object({
 
 export type RoomState = z.infer<typeof RoomState>;
 
-function createInitialRoomState(id: string, ownerId: string, code: string): RoomState {
+function createInitialRoomState(
+  id: string,
+  ownerId: string,
+  code: string
+): RoomState {
   return {
     id: id,
     owner: ownerId,
@@ -54,7 +64,11 @@ function createInitialRoomState(id: string, ownerId: string, code: string): Room
   };
 }
 
-function createInitialRoomSnapshot(id: string, ownerId: string, code: string): Snapshot<RoomState> {
+function createInitialRoomSnapshot(
+  id: string,
+  ownerId: string,
+  code: string
+): Snapshot<RoomState> {
   return {
     kind: "Snapshot",
     state: createInitialRoomState(id, ownerId, code),
@@ -181,7 +195,9 @@ export const GameSessionBuilderStarted = z.object({
   builderId: z.string(),
 });
 
-export type GameSessionBuilderStarted = z.infer<typeof GameSessionBuilderStarted>;
+export type GameSessionBuilderStarted = z.infer<
+  typeof GameSessionBuilderStarted
+>;
 
 export const RoomSessionCleared = z.object({
   kind: z.literal("RoomSessionCleared"),
@@ -289,7 +305,11 @@ function handleRoomCommand(
         return err({ kind: "GuestAlreadyInRoom", userId: command.userId });
       }
 
-      return ok({ kind: "GuestJoined", roomId: command.roomId, userId: command.userId });
+      return ok({
+        kind: "GuestJoined",
+        roomId: command.roomId,
+        userId: command.userId,
+      });
     }
 
     case "LeaveRoom": {
@@ -303,7 +323,11 @@ function handleRoomCommand(
         return err({ kind: "GuestNotInRoom", userId: command.userId });
       }
 
-      return ok({ kind: "GuestLeft", roomId: command.roomId, userId: command.userId });
+      return ok({
+        kind: "GuestLeft",
+        roomId: command.roomId,
+        userId: command.userId,
+      });
     }
 
     case "RemoveGuest": {
@@ -317,7 +341,11 @@ function handleRoomCommand(
         return err({ kind: "GuestNotInRoom", userId: command.guestId });
       }
 
-      return ok({ kind: "GuestRemoved", roomId: command.roomId, guestId: command.guestId });
+      return ok({
+        kind: "GuestRemoved",
+        roomId: command.roomId,
+        guestId: command.guestId,
+      });
     }
 
     case "StartGameSession": {
@@ -331,7 +359,11 @@ function handleRoomCommand(
         return err({ kind: "SessionAlreadyActive" });
       }
 
-      return ok({ kind: "GameSessionStarted", roomId: command.roomId, sessionId: command.sessionId });
+      return ok({
+        kind: "GameSessionStarted",
+        roomId: command.roomId,
+        sessionId: command.sessionId,
+      });
     }
 
     case "StartGameSessionBuilder": {
@@ -345,7 +377,11 @@ function handleRoomCommand(
         return err({ kind: "SessionAlreadyActive" });
       }
 
-      return ok({ kind: "GameSessionBuilderStarted", roomId: command.roomId, builderId: command.builderId });
+      return ok({
+        kind: "GameSessionBuilderStarted",
+        roomId: command.roomId,
+        builderId: command.builderId,
+      });
     }
 
     case "ClearRoomSession": {
@@ -363,7 +399,11 @@ function handleRoomCommand(
         return err({ kind: "NotOwner", userId: command.requesterId });
       }
 
-      return ok({ kind: "RoomCodeChanged", roomId: command.roomId, newCode: command.newCode });
+      return ok({
+        kind: "RoomCodeChanged",
+        roomId: command.roomId,
+        newCode: command.newCode,
+      });
     }
   }
 }
@@ -401,7 +441,10 @@ function roomReducer(state: RoomState, event: RoomEvent): RoomState {
     case "GameSessionBuilderStarted":
       return {
         ...state,
-        activeSession: { kind: "RoomSessionBuilder", builderId: event.builderId },
+        activeSession: {
+          kind: "RoomSessionBuilder",
+          builderId: event.builderId,
+        },
       };
 
     case "RoomSessionCleared":
@@ -436,7 +479,7 @@ export function createRoomLeader(
 }
 
 export function createRoomFollower(
-  initialState: RoomState
+  initialSnapshot: Snapshot<RoomState>
 ): FstFollower<RoomState, RoomEvent> {
-  return createFstFollower<RoomState, RoomEvent>(roomReducer, initialState);
+  return createFstFollower<RoomState, RoomEvent>(roomReducer, initialSnapshot);
 }

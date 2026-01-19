@@ -130,7 +130,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback that sends messages to server channel
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -161,7 +161,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -203,8 +203,11 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Act
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
-    // Assert
-    await waitFor(() => tracker.getCallCount() > 0);
+    // Assert - wait for snapshot from server with the rooms
+    await waitFor(() => {
+      const projection = tracker.getLastValue();
+      return projection ? projection.rooms.length === 2 : false;
+    });
     const projection = tracker.getLastValue();
     assert.ok(projection);
     assert.equal(projection.rooms.length, 2);
@@ -221,7 +224,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -269,7 +272,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -296,8 +299,11 @@ describe("GameServerProxy - Client-Server Communication", () => {
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
-    // Wait for initial snapshot with 1 room
-    await waitFor(() => tracker.getCallCount() > 0);
+    // Wait for snapshot from server with 1 room
+    await waitFor(() => {
+      const projection = tracker.getLastValue();
+      return projection ? projection.rooms.length === 1 : false;
+    });
     assert.equal(tracker.getLastValue()?.rooms.length, 1);
 
     // Act - remove room via proxy
@@ -323,7 +329,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -352,8 +358,11 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Act
     const unsubscribe = proxy.subscribeToRoom("room1", tracker.callback);
 
-    // Assert
-    await waitFor(() => tracker.getCallCount() > 0);
+    // Assert - wait for snapshot from server with actual room data
+    await waitFor(() => {
+      const roomState = tracker.getLastValue();
+      return roomState ? roomState.owner === "user1" : false;
+    });
     const roomState = tracker.getLastValue();
     assert.ok(roomState);
     assert.equal(roomState.id, "room1");
@@ -371,7 +380,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         serverChannel.send(JSON.stringify(message), "");
       },
     });
@@ -435,7 +444,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback that sends to all channels
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         setupServerChannel.send(JSON.stringify(message), "");
         serverChannel.send(JSON.stringify(message), "");
         otherServerChannel.send(JSON.stringify(message), "");
@@ -481,7 +490,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     const tracker2 = createCallbackTracker<RoomState>();
 
     // Act
-    const unsubscribe1 = proxy.subscribeToRoom("room1", tracker1.callback);
+    proxy.subscribeToRoom("room1", tracker1.callback);
 
     // Wait for room1 state
     await waitFor(() => tracker1.getCallCount() > 0);
@@ -528,7 +537,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Create server with broadcast callback that sends to both channels
     const server = createGameServer({
       maxSubscribers: 10,
-      onBroadcast: (message, clientId) => {
+      onBroadcast: (message, _clientId) => {
         // Broadcast to both server channels
         serverChannel1.send(JSON.stringify(message), "");
         serverChannel2.send(JSON.stringify(message), "");

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { RoomState, RoomEvent } from "./room";
 import type { CollectionEvent } from "../fst/fst-collection";
+import { Snapshot } from "../fst/fst";
 
 export const RoomsProjection = z.object({
   kind: z.literal("RoomsProjection"),
@@ -22,6 +23,14 @@ export function roomsProjectionInitialState(): RoomsProjection {
   return {
     kind: "RoomsProjection",
     rooms: [],
+  };
+}
+
+export function roomsProjectionInitialSnapshot(): Snapshot<RoomsProjection> {
+  return {
+    kind: "Snapshot",
+    state: roomsProjectionInitialState(),
+    lastAppliedIndex: 0,
   };
 }
 

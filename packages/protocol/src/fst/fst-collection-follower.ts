@@ -1,4 +1,4 @@
-import { FstFollower, createFstFollower } from "./fst";
+import { FstFollower, Snapshot, createFstFollower } from "./fst";
 import { CollectionEvent } from "./fst-collection";
 
 // ========================================
@@ -31,12 +31,9 @@ export type EntityFollowerFactory<TEntityState, TEntityEvent> = (
 // ========================================
 
 export function createFstCollectionFollower<TEntityState, TEntityEvent>(
-  entityFollowerFactory: EntityFollowerFactory<TEntityState, TEntityEvent>
+  entityFollowerFactory: EntityFollowerFactory<TEntityState, TEntityEvent>,
+  initialSnapshot: Snapshot<CollectionFollowerState<TEntityState, TEntityEvent>>
 ): CollectionFstFollower<TEntityState, TEntityEvent> {
-  const initialState: CollectionFollowerState<TEntityState, TEntityEvent> = {
-    entities: {},
-  };
-
   // Reducer for collection events
   const collectionReducer = (
     state: CollectionFollowerState<TEntityState, TEntityEvent>,
@@ -86,5 +83,5 @@ export function createFstCollectionFollower<TEntityState, TEntityEvent>(
   return createFstFollower<
     CollectionFollowerState<TEntityState, TEntityEvent>,
     CollectionEvent<TEntityState, TEntityEvent>
-  >(collectionReducer, initialState);
+  >(collectionReducer, initialSnapshot);
 }

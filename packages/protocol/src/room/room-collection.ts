@@ -22,12 +22,7 @@ import {
   RoomEvent as RoomEventSchema,
   RoomError as RoomErrorSchema,
 } from "./room";
-import type {
-  RoomState,
-  RoomCommand,
-  RoomEvent,
-  RoomError,
-} from "./room";
+import type { RoomState, RoomCommand, RoomEvent, RoomError } from "./room";
 
 // ========================================
 // Room Collection Constants
@@ -39,7 +34,10 @@ export const ROOM_ENTITY_TYPE = "Room";
 // Room Collection Command Schema
 // ========================================
 
-export const RoomCollectionCommand = createCollectionCommandSchema(RoomStateSchema, RoomCommandSchema);
+export const RoomCollectionCommand = createCollectionCommandSchema(
+  RoomStateSchema,
+  RoomCommandSchema,
+);
 
 export type RoomCollectionCommand = CollectionCommand<RoomState, RoomCommand>;
 
@@ -47,7 +45,10 @@ export type RoomCollectionCommand = CollectionCommand<RoomState, RoomCommand>;
 // Room Collection Event Schema
 // ========================================
 
-export const RoomCollectionEvent = createCollectionEventSchema(RoomStateSchema, RoomEventSchema);
+export const RoomCollectionEvent = createCollectionEventSchema(
+  RoomStateSchema,
+  RoomEventSchema,
+);
 
 export type RoomCollectionEvent = CollectionEvent<RoomState, RoomEvent>;
 
@@ -63,17 +64,33 @@ export type RoomCollectionError = CollectionError<RoomError>;
 // Room Collection State Types
 // ========================================
 
-export type RoomCollectionState = CollectionState<RoomState, RoomCommand, RoomEvent, RoomError>;
+export type RoomCollectionState = CollectionState<
+  RoomState,
+  RoomCommand,
+  RoomEvent,
+  RoomError
+>;
 
-export type RoomCollectionFollowerState = CollectionFollowerState<RoomState, RoomEvent>;
+export type RoomCollectionFollowerState = CollectionFollowerState<
+  RoomState,
+  RoomEvent
+>;
 
 // ========================================
 // Room Collection FST Types
 // ========================================
 
-export type RoomCollectionFstLeader = CollectionFstLeader<RoomState, RoomCommand, RoomEvent, RoomError>;
+export type RoomCollectionFstLeader = CollectionFstLeader<
+  RoomState,
+  RoomCommand,
+  RoomEvent,
+  RoomError
+>;
 
-export type RoomCollectionFstFollower = CollectionFstFollower<RoomState, RoomEvent>;
+export type RoomCollectionFstFollower = CollectionFstFollower<
+  RoomState,
+  RoomEvent
+>;
 
 // ========================================
 // Room Collection Factories
@@ -81,10 +98,10 @@ export type RoomCollectionFstFollower = CollectionFstFollower<RoomState, RoomEve
 
 export function createRoomCollection(): RoomCollectionFstLeader {
   return createFstCollection(ROOM_ENTITY_TYPE, (snapshot) =>
-    createRoomLeader(snapshot.state.id, snapshot.state.owner, snapshot.state.code)
+    createRoomLeader(
+      snapshot.state.id,
+      snapshot.state.owner,
+      snapshot.state.code,
+    ),
   );
-}
-
-export function createRoomCollectionFollower(): RoomCollectionFstFollower {
-  return createFstCollectionFollower(createRoomFollower);
 }

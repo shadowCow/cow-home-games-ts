@@ -1,9 +1,9 @@
 import {
-  GameServerProxy,
   createGameServerProxy,
   createGameServer,
   JsonMessageChannel,
 } from "@cow-sunday/protocol";
+import { GameServerProxyWs } from "./ProxyWithWebsocket";
 
 // ========================================
 // In-Memory Message Channel
@@ -25,10 +25,10 @@ class InMemoryMessageChannel implements JsonMessageChannel {
 
   send(message: string, _authToken: string): void {
     if (this.peerChannel?.messageHandler) {
-      // Simulate async delivery with setImmediate
-      setImmediate(() => {
+      // Simulate async delivery with setTimeout
+      setTimeout(() => {
         this.peerChannel!.messageHandler!(message);
-      });
+      }, 0);
     }
   }
 
@@ -58,7 +58,7 @@ function createChannelPair(): {
  */
 function connectServerToChannel(
   server: ReturnType<typeof createGameServer>,
-  channel: JsonMessageChannel
+  channel: JsonMessageChannel,
 ): void {
   channel.onMessage((messageString: string) => {
     try {
@@ -78,7 +78,7 @@ function connectServerToChannel(
  * Creates a GameServerProxy backed by an in-memory GameServer.
  * Useful for local development, testing, or offline mode.
  */
-export function createProxyInMemory(): GameServerProxy {
+export function createProxyInMemory(): GameServerProxyWs {
   const { clientChannel, serverChannel } = createChannelPair();
 
   // Create server with broadcast callback that sends messages to server channel
@@ -93,5 +93,26 @@ export function createProxyInMemory(): GameServerProxy {
   connectServerToChannel(server, serverChannel);
 
   // Create and return proxy
-  return createGameServerProxy(clientChannel);
+  const proxy = createGameServerProxy(clientChannel);
+
+  return {
+    offerRoomsCommand(command) {
+      return proxy.offerRoomsCommand(command);
+    },
+    subscribeToRooms(callback) {
+      return proxy.subscribeToRooms(callback);
+    },
+    offerRoomCommand(command) {
+      return proxy.offerRoomCommand(command);
+    },
+    subscribeToRoom(roomId, callback) {
+      return proxy.subscribeToRoom(roomId, callback);
+    },
+    connect() {
+      // no-op for inmem
+    },
+    close() {
+      // no-op for inmem
+    },
+  };
 }

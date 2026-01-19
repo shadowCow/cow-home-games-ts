@@ -27,8 +27,11 @@ export function RoomsPage(props: {
 
   return (
     <div className={styles.container}>
+      <h1 className={styles.title}>Rooms</h1>
       {rooms === undefined ? (
         <Loading />
+      ) : rooms.rooms.length === 0 ? (
+        <div className={styles.emptyState}>No Rooms</div>
       ) : (
         <List
           items={rooms.rooms}

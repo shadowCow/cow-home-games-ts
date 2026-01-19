@@ -12,7 +12,10 @@ import { GameServiceGameServer } from "./services/game/GameServiceGameServer";
 import { GameRegistry } from "./games/GameRegistry";
 import { TicTacToe } from "./games/TicTacToe/TicTacToe";
 import { GameServerProxy } from "@cow-sunday/protocol";
-import { createProxyWithWebsocket } from "./services/game/ProxyWithWebsocket";
+import {
+  createProxyWithWebsocket,
+  GameServerProxyWs,
+} from "./services/game/ProxyWithWebsocket";
 import { createProxyInMemory } from "./services/game/ProxyInMemory";
 
 // Wire up dependencies
@@ -24,7 +27,7 @@ const gameService: GameService = config.useInMemoryServices
   ? new GameServiceInMemory()
   : new GameServiceGameServer();
 
-const gameServerProxy: GameServerProxy = config.useInMemoryServices
+const gameServerProxy: GameServerProxyWs = config.useInMemoryServices
   ? createProxyInMemory()
   : createProxyWithWebsocket({
       url: "",

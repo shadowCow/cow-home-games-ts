@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { LoginPage } from "./LoginPage/LoginPage";
-import { Navigator } from "./Navigator/Navigator";
+import { Home } from "./Home/Home";
 import { AuthGateway } from "../services/auth/AuthGateway";
 import { GameRegistry } from "../games/GameRegistry";
 import { User } from "../services/auth/User";
-import { GameServerProxy } from "@cow-sunday/protocol";
+import { GameServerProxyWs } from "../services/game/ProxyWithWebsocket";
 
 function App(props: {
   authGateway: AuthGateway;
-  gameServerProxy: GameServerProxy;
+  gameServerProxy: GameServerProxyWs;
   gameRegistry: GameRegistry;
 }) {
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +32,7 @@ function App(props: {
   }
 
   return (
-    <Navigator
+    <Home
       gameServerProxy={props.gameServerProxy}
       gameRegistry={props.gameRegistry}
     />

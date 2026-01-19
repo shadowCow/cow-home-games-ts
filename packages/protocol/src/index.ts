@@ -7,7 +7,6 @@ export * from "./common/validation";
 export * from "./game/session";
 export * from "./fst/fst";
 export * from "./fst/projection-store";
-export * from "./game-client/game-client";
 export * from "./game-server/game-server";
 export * from "./game-server-proxy/game-server-proxy";
 export * from "./room/room";

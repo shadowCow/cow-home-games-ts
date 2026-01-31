@@ -51,7 +51,16 @@ export function RoomsPage(props: {
           }
         }}
       />
-      <QuickJoinRoom />
+      <QuickJoinRoom
+        onJoinRoom={(roomId, code) => {
+          props.gameServerProxy.offerRoomCommand({
+            kind: "JoinRoom",
+            roomId,
+            userId: props.user.username,
+            code,
+          });
+        }}
+      />
       <div className={styles.roomsListSection}>
         <RoomsList
           rooms={rooms}

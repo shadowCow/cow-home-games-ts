@@ -1,50 +1,25 @@
-import { Dispatch, useState, useEffect } from "react";
+import { Dispatch } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
-import { GameServerProxy, RoomsProjection } from "@cow-sunday/protocol";
-import { GameService } from "../../services/game/GameService";
-import { List } from "../common/List/List";
-import { Loading } from "../common/Loading/Loading";
+import { GameServerProxy } from "@cow-sunday/protocol";
+import { MyRoom } from "./MyRoom/MyRoom";
+import { QuickJoinRoom } from "./QuickJoinRoom/QuickJoinRoom";
+import { RoomsList } from "./RoomsList/RoomsList";
 import styles from "./RoomsPage.module.css";
 
 export function RoomsPage(props: {
   gameServerProxy: GameServerProxy;
   navigate: Dispatch<NavigationAction>;
 }) {
-  const [rooms, setRooms] = useState<RoomsProjection>();
-  const [selectedIndex, setSelectedIndex] = useState<number>();
-
-  useEffect(() => {
-    return props.gameServerProxy.subscribeToRooms((s) => setRooms(s));
-  }, [props.gameServerProxy]);
-
-  const handleSelectRoom = (index: number) => {
-    setSelectedIndex(index);
-    if (rooms) {
-      const room = rooms.rooms[index];
-      props.navigate({ type: "NavigateToRoom", roomId: room.entityId });
-    }
-  };
-
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Rooms</h1>
-      {rooms === undefined ? (
-        <Loading />
-      ) : rooms.rooms.length === 0 ? (
-        <div className={styles.emptyState}>No Rooms</div>
-      ) : (
-        <List
-          items={rooms.rooms}
-          renderItem={(room) => (
-            <div className={styles.roomItem}>
-              <div className={styles.roomOwner}>{room.roomOwner}</div>
-              <div className={styles.roomId}>{room.entityId}</div>
-            </div>
-          )}
-          selectedIndex={selectedIndex}
-          onSelectItem={handleSelectRoom}
+      <MyRoom />
+      <QuickJoinRoom />
+      <div className={styles.roomsListSection}>
+        <RoomsList
+          gameServerProxy={props.gameServerProxy}
+          navigate={props.navigate}
         />
-      )}
+      </div>
     </div>
   );
 }

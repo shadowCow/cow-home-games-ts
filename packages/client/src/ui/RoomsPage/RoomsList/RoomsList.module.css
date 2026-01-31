@@ -1,0 +1,27 @@
+.title {
+  padding: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.emptyState {
+  padding: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.roomItem {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.25rem;
+}
+
+.roomOwner {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.roomId {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}

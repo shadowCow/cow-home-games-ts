@@ -6,18 +6,15 @@ import styles from "./MyRoom.module.css";
 export function MyRoom(props: {
   roomDoor: RoomDoor | null | undefined;
   onCreateRoom: () => void;
+  onOpenRoom: () => void;
 }) {
-  const handleOpen = () => {
-    console.log("Open clicked");
-  };
-
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>My Room</h2>
       {props.roomDoor === undefined ? (
         <Loading />
       ) : props.roomDoor ? (
-        <Button onClick={handleOpen}>Open</Button>
+        <Button onClick={props.onOpenRoom}>Open</Button>
       ) : (
         <Button onClick={props.onCreateRoom}>Create</Button>
       )}

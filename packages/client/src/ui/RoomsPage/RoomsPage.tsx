@@ -42,7 +42,15 @@ export function RoomsPage(props: {
 
   return (
     <div className={styles.container}>
-      <MyRoom roomDoor={myRoomDoor} onCreateRoom={handleCreateRoom} />
+      <MyRoom
+        roomDoor={myRoomDoor}
+        onCreateRoom={handleCreateRoom}
+        onOpenRoom={() => {
+          if (myRoomDoor) {
+            props.navigate({ type: "NavigateToRoom", roomId: myRoomDoor.entityId });
+          }
+        }}
+      />
       <QuickJoinRoom />
       <div className={styles.roomsListSection}>
         <RoomsList

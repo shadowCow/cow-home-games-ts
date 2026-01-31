@@ -3,6 +3,7 @@ import {
   createJsonMessageChannelWs,
   WebSocketChannelConfig,
 } from "./JsonMessageChannelWs";
+import { LoggingService } from "../logging/LoggingService";
 
 export type GameServerProxyWs = GameServerProxy & {
   connect: () => void;
@@ -11,8 +12,9 @@ export type GameServerProxyWs = GameServerProxy & {
 
 export function createProxyWithWebsocket(
   config: WebSocketChannelConfig,
+  log: LoggingService,
 ): GameServerProxyWs {
-  const channel = createJsonMessageChannelWs(config);
+  const channel = createJsonMessageChannelWs(config, log);
 
   const proxy = createGameServerProxy(channel);
 

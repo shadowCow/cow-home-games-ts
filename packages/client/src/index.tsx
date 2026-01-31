@@ -17,8 +17,10 @@ import {
   GameServerProxyWs,
 } from "./services/game/ProxyWithWebsocket";
 import { createProxyInMemory } from "./services/game/ProxyInMemory";
+import { createConsoleLoggingService } from "./services/logging/LoggingService";
 
 // Wire up dependencies
+const loggingService = createConsoleLoggingService();
 const authGateway: AuthGateway = config.useInMemoryServices
   ? new AuthGatewayInMemory()
   : new AuthGatewayGameServer();
@@ -29,9 +31,12 @@ const gameService: GameService = config.useInMemoryServices
 
 const gameServerProxy: GameServerProxyWs = config.useInMemoryServices
   ? createProxyInMemory()
-  : createProxyWithWebsocket({
-      url: "",
-    });
+  : createProxyWithWebsocket(
+      {
+        url: `ws://${location.host}/ws/game`,
+      },
+      loggingService,
+    );
 
 // Register available games
 const gameRegistry: GameRegistry = {
@@ -45,5 +50,5 @@ createRoot(document.getElementById("root")!).render(
       gameServerProxy={gameServerProxy}
       gameRegistry={gameRegistry}
     />
-  </StrictMode>
+  </StrictMode>,
 );

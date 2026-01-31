@@ -1,4 +1,5 @@
 import { JsonMessageChannel } from "@cow-sunday/protocol";
+import { LoggingService } from "../logging/LoggingService";
 
 // ========================================
 // Configuration
@@ -24,7 +25,8 @@ export type JsonMessageChannelWs = JsonMessageChannel & {
  * Automatically connects on creation and handles reconnection on disconnect.
  */
 export function createJsonMessageChannelWs(
-  config: WebSocketChannelConfig
+  config: WebSocketChannelConfig,
+  log: LoggingService,
 ): JsonMessageChannelWs {
   const {
     url,
@@ -51,7 +53,7 @@ export function createJsonMessageChannelWs(
       ws = new WebSocket(url);
 
       ws.onopen = () => {
-        console.log("WebSocket connected:", url);
+        log.info(`[WS] Connected: ${url}`);
         currentReconnectDelay = reconnectDelayMs; // Reset backoff
         onConnectionStateChange?.(true);
 
@@ -59,6 +61,7 @@ export function createJsonMessageChannelWs(
         while (messageQueue.length > 0) {
           const queued = messageQueue.shift();
           if (queued && ws && ws.readyState === WebSocket.OPEN) {
+            log.info(`[WS] Sending queued: ${queued.message}`);
             ws.send(queued.message);
           }
         }
@@ -66,16 +69,17 @@ export function createJsonMessageChannelWs(
 
       ws.onmessage = (event) => {
         if (typeof event.data === "string") {
+          log.info(`[WS] Received: ${event.data}`);
           messageHandler(event.data);
         }
       };
 
-      ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+      ws.onerror = () => {
+        log.error("[WS] Error");
       };
 
       ws.onclose = () => {
-        console.log("WebSocket closed");
+        log.info("[WS] Closed");
         onConnectionStateChange?.(false);
 
         // Attempt reconnection unless intentionally closed
@@ -84,7 +88,7 @@ export function createJsonMessageChannelWs(
         }
       };
     } catch (error) {
-      console.error("Failed to create WebSocket:", error);
+      log.error(`[WS] Failed to create WebSocket: ${error}`);
       scheduleReconnect();
     }
   }
@@ -94,7 +98,7 @@ export function createJsonMessageChannelWs(
       return; // Already scheduled
     }
 
-    console.log(`Reconnecting in ${currentReconnectDelay}ms...`);
+    log.info(`[WS] Reconnecting in ${currentReconnectDelay}ms...`);
 
     reconnectTimeoutId = window.setTimeout(() => {
       reconnectTimeoutId = null;
@@ -103,7 +107,7 @@ export function createJsonMessageChannelWs(
       // Exponential backoff up to max
       currentReconnectDelay = Math.min(
         currentReconnectDelay * 2,
-        maxReconnectDelayMs
+        maxReconnectDelayMs,
       );
     }, currentReconnectDelay);
   }
@@ -130,10 +134,11 @@ export function createJsonMessageChannelWs(
   return {
     send(message: string, _authToken: string): void {
       if (ws && ws.readyState === WebSocket.OPEN) {
+        log.info(`[WS] Sending: ${message}`);
         ws.send(message);
       } else {
         // Queue message if not connected
-        console.warn("WebSocket not connected, queueing message");
+        log.info("[WS] Not connected, queueing message");
         messageQueue.push({ message, authToken: _authToken });
       }
     },

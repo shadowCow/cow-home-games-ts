@@ -12,8 +12,10 @@ import {
   NavigationAction,
 } from "./navigationReducer";
 import { GameServerProxy } from "@cow-sunday/protocol";
+import { User } from "../../services/auth/User";
 
 export function Navigator(props: {
+  user: User;
   gameServerProxy: GameServerProxy;
   gameRegistry: GameRegistry;
 }) {
@@ -28,6 +30,7 @@ export function Navigator(props: {
     case "Rooms":
       return (
         <RoomsPage
+          user={props.user}
           gameServerProxy={props.gameServerProxy}
           navigate={dispatch}
         />

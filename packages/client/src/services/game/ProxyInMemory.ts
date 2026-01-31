@@ -96,6 +96,9 @@ export function createProxyInMemory(): GameServerProxyWs {
   const proxy = createGameServerProxy(clientChannel);
 
   return {
+    getRoomDoor(owner) {
+      return proxy.getRoomDoor(owner);
+    },
     offerRoomsCommand(command) {
       return proxy.offerRoomsCommand(command);
     },

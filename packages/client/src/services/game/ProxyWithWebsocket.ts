@@ -10,13 +10,16 @@ export type GameServerProxyWs = GameServerProxy & {
 };
 
 export function createProxyWithWebsocket(
-  config: WebSocketChannelConfig
+  config: WebSocketChannelConfig,
 ): GameServerProxyWs {
   const channel = createJsonMessageChannelWs(config);
 
   const proxy = createGameServerProxy(channel);
 
   return {
+    getRoomDoor(owner) {
+      return proxy.getRoomDoor(owner);
+    },
     offerRoomsCommand(command) {
       return proxy.offerRoomsCommand(command);
     },

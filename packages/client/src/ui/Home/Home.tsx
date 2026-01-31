@@ -26,6 +26,7 @@ export function Home(props: {
       <HeaderBar user={props.user} />
       <div className={styles.main}>
         <Navigator
+          user={props.user}
           gameServerProxy={props.gameServerProxy}
           gameRegistry={props.gameRegistry}
         />

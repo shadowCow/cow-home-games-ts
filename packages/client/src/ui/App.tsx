@@ -33,6 +33,7 @@ function App(props: {
 
   return (
     <Home
+      user={user}
       gameServerProxy={props.gameServerProxy}
       gameRegistry={props.gameRegistry}
     />

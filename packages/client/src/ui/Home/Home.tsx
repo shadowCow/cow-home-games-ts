@@ -1,9 +1,13 @@
 import { useEffect } from "react";
 import { Navigator } from "../Navigator/Navigator";
+import { HeaderBar } from "../common/HeaderBar/HeaderBar";
 import { GameServerProxyWs } from "../../services/game/ProxyWithWebsocket";
 import { GameRegistry } from "../../games/GameRegistry";
+import { User } from "../../services/auth/User";
+import styles from "./Home.module.css";
 
 export function Home(props: {
+  user: User;
   gameServerProxy: GameServerProxyWs;
   gameRegistry: GameRegistry;
 }) {
@@ -18,9 +22,14 @@ export function Home(props: {
   }, [props.gameServerProxy]);
 
   return (
-    <Navigator
-      gameServerProxy={props.gameServerProxy}
-      gameRegistry={props.gameRegistry}
-    />
+    <div className={styles.container}>
+      <HeaderBar user={props.user} />
+      <div className={styles.main}>
+        <Navigator
+          gameServerProxy={props.gameServerProxy}
+          gameRegistry={props.gameRegistry}
+        />
+      </div>
+    </div>
   );
 }

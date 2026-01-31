@@ -9,7 +9,7 @@ import {
 } from "../room/room-collection";
 import { ValidationFailure } from "../common/validation";
 import { IndexedEvent, Snapshot } from "../fst/fst";
-import { RoomsProjection } from "../room/rooms-projection";
+import { RoomDoor, RoomsProjection } from "../room/rooms-projection";
 import { RoomState, RoomEvent } from "../room/room";
 
 // ========================================
@@ -47,6 +47,15 @@ export const UnsubscribeRoom = z.object({
 
 export type UnsubscribeRoom = z.infer<typeof UnsubscribeRoom>;
 
+export const GetRoomDoor = z.object({
+  kind: z.literal("GetRoomDoor"),
+  clientId: z.string(),
+  requestId: z.string(),
+  owner: z.string(),
+});
+
+export type GetRoomDoor = z.infer<typeof GetRoomDoor>;
+
 // Combined message type that server can receive from clients
 export const GameServerIncomingMessage = z.discriminatedUnion("kind", [
   RoomCollectionCommand,
@@ -54,17 +63,27 @@ export const GameServerIncomingMessage = z.discriminatedUnion("kind", [
   UnsubscribeRooms,
   SubscribeRoom,
   UnsubscribeRoom,
+  GetRoomDoor,
 ]);
 
 export type GameServerIncomingMessage = z.infer<
   typeof GameServerIncomingMessage
 >;
 
+export const GetRoomDoorResponse = z.object({
+  kind: z.literal("GetRoomDoorResponse"),
+  requestId: z.string(),
+  roomDoor: RoomDoor.nullable(),
+});
+
+export type GetRoomDoorResponse = z.infer<typeof GetRoomDoorResponse>;
+
 // Messages that server can send to clients
 // Can send snapshots and events for both RoomsProjection and individual RoomState
 export const GameServerOutgoingMessage = z.discriminatedUnion("kind", [
   IndexedEvent(z.any()), // Can be CollectionEvent or RoomEvent
   Snapshot(z.any()), // Can be RoomsProjection or RoomState
+  GetRoomDoorResponse,
 ]);
 
 export type GameServerOutgoingMessage = z.infer<
@@ -372,6 +391,32 @@ export function createGameServer(config: GameServerConfig): GameServer {
           return {
             kind: "ValidationFailure",
             message: "UnsubscribeRoom processed",
+          };
+        }
+
+        case "GetRoomDoor": {
+          const collectionSnapshot = state.rooms.getSnapshot();
+          let foundDoor: RoomDoor | null = null;
+
+          for (const [roomId, roomFst] of Object.entries(collectionSnapshot.state.entities)) {
+            const roomState = roomFst.getState();
+            if (roomState.owner === validatedMessage.owner) {
+              foundDoor = { entityId: roomId, roomOwner: roomState.owner };
+              break;
+            }
+          }
+
+          const response: GetRoomDoorResponse = {
+            kind: "GetRoomDoorResponse",
+            requestId: validatedMessage.requestId,
+            roomDoor: foundDoor,
+          };
+
+          sendToClient(response, validatedMessage.clientId);
+
+          return {
+            kind: "ValidationFailure",
+            message: "GetRoomDoor processed",
           };
         }
       }

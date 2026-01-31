@@ -21,6 +21,7 @@ import {
   RoomCollectionError,
   RoomCollectionEvent,
 } from "../room/room-collection";
+import { RoomDoor } from "../room/rooms-projection";
 import { Result, err } from "@cow-sunday/fp-ts";
 import type { ProjectionStore } from "../fst/projection-store";
 
@@ -39,6 +40,8 @@ export type GameServerProxy = {
     roomId: string,
     callback: (room: RoomState) => void
   ): () => void;
+
+  getRoomDoor(owner: string): Promise<RoomDoor | null>;
 };
 
 // ========================================
@@ -71,6 +74,10 @@ export function createGameServerProxy(
     }
   >();
   let nextCallbackId = 0;
+
+  // Pending request-response tracking
+  const pendingRequests = new Map<string, (response: any) => void>();
+  let nextRequestId = 0;
 
   // Handle incoming messages from the server
   channel.onMessage((messageString: string) => {
@@ -187,6 +194,15 @@ export function createGameServerProxy(
           );
           break;
         }
+
+        case "GetRoomDoorResponse": {
+          const resolver = pendingRequests.get(validatedMessage.requestId);
+          if (resolver) {
+            pendingRequests.delete(validatedMessage.requestId);
+            resolver(validatedMessage.roomDoor);
+          }
+          break;
+        }
       }
     } catch (error) {
       console.error("Error handling message:", error);
@@ -271,6 +287,22 @@ export function createGameServerProxy(
         }
         roomCallbacks.delete(callbackId);
       };
+    },
+
+    getRoomDoor(owner: string): Promise<RoomDoor | null> {
+      const requestId = `req-${nextRequestId++}`;
+
+      return new Promise((resolve) => {
+        pendingRequests.set(requestId, resolve);
+
+        const message = {
+          kind: "GetRoomDoor",
+          clientId,
+          requestId,
+          owner,
+        };
+        channel.send(JSON.stringify(message), "");
+      });
     },
   };
 }

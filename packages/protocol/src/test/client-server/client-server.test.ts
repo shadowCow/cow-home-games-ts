@@ -5,6 +5,7 @@ import { createGameServerProxy } from "../../game-server-proxy/game-server-proxy
 import type { JsonMessageChannel } from "../../channel/json-message-channel";
 import type { RoomsProjection } from "../../room/rooms-projection";
 import type { RoomState } from "../../room/room";
+import type { RoomDoor } from "../../room/rooms-projection";
 
 // ========================================
 // Test Message Channel Implementation
@@ -525,6 +526,115 @@ describe("GameServerProxy - Client-Server Communication", () => {
     );
 
     unsubscribe2();
+  });
+
+  test("should return room door for existing owner via getRoomDoor", async () => {
+    // Arrange
+    const { clientChannel, serverChannel } = createChannelPair();
+
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, _clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    connectServerToChannel(server, serverChannel);
+
+    // Add a room directly via server
+    server.handleMessage({
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        id: "room1",
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
+      },
+    });
+
+    const proxy = createGameServerProxy(clientChannel);
+
+    // Act
+    const roomDoor = await proxy.getRoomDoor("user1");
+
+    // Assert
+    assert.ok(roomDoor);
+    assert.equal(roomDoor.entityId, "room1");
+    assert.equal(roomDoor.roomOwner, "user1");
+  });
+
+  test("should return null from getRoomDoor when owner has no room", async () => {
+    // Arrange
+    const { clientChannel, serverChannel } = createChannelPair();
+
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, _clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    connectServerToChannel(server, serverChannel);
+
+    const proxy = createGameServerProxy(clientChannel);
+
+    // Act
+    const roomDoor = await proxy.getRoomDoor("nonexistent-user");
+
+    // Assert
+    assert.equal(roomDoor, null);
+  });
+
+  test("should return first room when owner has multiple rooms via getRoomDoor", async () => {
+    // Arrange
+    const { clientChannel, serverChannel } = createChannelPair();
+
+    const server = createGameServer({
+      maxSubscribers: 10,
+      onBroadcast: (message, _clientId) => {
+        serverChannel.send(JSON.stringify(message), "");
+      },
+    });
+
+    connectServerToChannel(server, serverChannel);
+
+    server.handleMessage({
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room1",
+      initialState: {
+        id: "room1",
+        owner: "user1",
+        code: "ABC123",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
+      },
+    });
+
+    server.handleMessage({
+      kind: "AddEntity",
+      entityType: "Room",
+      id: "room2",
+      initialState: {
+        id: "room2",
+        owner: "user1",
+        code: "XYZ789",
+        guests: [],
+        activeSession: { kind: "RoomNoSession" },
+      },
+    });
+
+    const proxy = createGameServerProxy(clientChannel);
+
+    // Act
+    const roomDoor = await proxy.getRoomDoor("user1");
+
+    // Assert
+    assert.ok(roomDoor);
+    assert.equal(roomDoor.roomOwner, "user1");
   });
 
   test("should support multiple clients subscribing to rooms", async () => {

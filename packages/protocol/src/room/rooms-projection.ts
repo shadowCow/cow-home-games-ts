@@ -3,14 +3,16 @@ import type { RoomState, RoomEvent } from "./room";
 import type { CollectionEvent } from "../fst/fst-collection";
 import { Snapshot } from "../fst/fst";
 
+export const RoomDoor = z.object({
+  entityId: z.string(),
+  roomOwner: z.string(),
+});
+
+export type RoomDoor = z.infer<typeof RoomDoor>;
+
 export const RoomsProjection = z.object({
   kind: z.literal("RoomsProjection"),
-  rooms: z.array(
-    z.object({
-      entityId: z.string(),
-      roomOwner: z.string(),
-    })
-  ),
+  rooms: z.array(RoomDoor),
 });
 
 export type RoomsProjection = z.infer<typeof RoomsProjection>;
@@ -40,7 +42,7 @@ export function roomsProjectionInitialSnapshot(): Snapshot<RoomsProjection> {
 
 export function roomsProjectionReducer(
   state: RoomsProjection,
-  event: CollectionEvent<RoomState, RoomEvent>
+  event: CollectionEvent<RoomState, RoomEvent>,
 ): RoomsProjection {
   switch (event.kind) {
     case "EntityAdded":

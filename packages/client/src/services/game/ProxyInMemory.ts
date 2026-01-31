@@ -81,6 +81,9 @@ function connectServerToChannel(
 export function createProxyInMemory(): GameServerProxyWs {
   const { clientChannel, serverChannel } = createChannelPair();
 
+  // Generate a client ID for the in-memory connection
+  const clientId = `client-${Math.random().toString(36).substring(2, 11)}`;
+
   // Create server with broadcast callback that sends messages to server channel
   const server = createGameServer({
     maxSubscribers: 100,
@@ -91,6 +94,9 @@ export function createProxyInMemory(): GameServerProxyWs {
 
   // Wire server to receive messages from its channel
   connectServerToChannel(server, serverChannel);
+
+  // Send ClientConnected handshake to the client
+  serverChannel.send(JSON.stringify({ kind: "ClientConnected", clientId }), "");
 
   // Create and return proxy
   const proxy = createGameServerProxy(clientChannel);

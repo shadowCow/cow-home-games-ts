@@ -79,6 +79,19 @@ function connectServerToChannel(
 // ========================================
 
 /**
+ * Simulates the server sending a ClientConnected handshake message to the client.
+ */
+function sendClientConnected(
+  serverChannel: JsonMessageChannel,
+  clientId: string
+): void {
+  serverChannel.send(
+    JSON.stringify({ kind: "ClientConnected", clientId }),
+    ""
+  );
+}
+
+/**
  * Helper to wait for a condition to become true.
  */
 async function waitFor(
@@ -140,6 +153,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     connectServerToChannel(server, serverChannel);
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
     const tracker = createCallbackTracker<RoomsProjection>();
 
     // Act
@@ -199,6 +213,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Now create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
     const tracker = createCallbackTracker<RoomsProjection>();
 
     // Act
@@ -234,6 +249,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     connectServerToChannel(server, serverChannel);
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
 
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
@@ -297,6 +313,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
     const tracker = createCallbackTracker<RoomsProjection>();
     const unsubscribe = proxy.subscribeToRooms(tracker.callback);
 
@@ -354,6 +371,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
     const tracker = createCallbackTracker<RoomState>();
 
     // Act
@@ -405,6 +423,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Create proxy AFTER setup is complete
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
     const tracker = createCallbackTracker<RoomState>();
     const unsubscribe = proxy.subscribeToRoom("room1", tracker.callback);
 
@@ -459,6 +478,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
 
     // Create a setup proxy to add two rooms
     const setupProxy = createGameServerProxy(setupChannel);
+    sendClientConnected(setupServerChannel, "setup-client");
     await setupProxy.offerRoomsCommand({
       kind: "AddEntity",
       entityType: "Room",
@@ -486,6 +506,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     });
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
 
     const tracker1 = createCallbackTracker<RoomState>();
     const tracker2 = createCallbackTracker<RoomState>();
@@ -509,6 +530,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     // Make a change to room1 via another client - tracker1 should not receive it
     const room1CallCount = tracker1.getCallCount();
     const otherClientProxy = createGameServerProxy(otherChannel);
+    sendClientConnected(otherServerChannel, "other-client");
     await otherClientProxy.offerRoomCommand({
       kind: "JoinRoom",
       roomId: "room1",
@@ -556,6 +578,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     });
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
 
     // Act
     const roomDoor = await proxy.getRoomDoor("user1");
@@ -580,6 +603,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     connectServerToChannel(server, serverChannel);
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
 
     // Act
     const roomDoor = await proxy.getRoomDoor("nonexistent-user");
@@ -628,6 +652,7 @@ describe("GameServerProxy - Client-Server Communication", () => {
     });
 
     const proxy = createGameServerProxy(clientChannel);
+    sendClientConnected(serverChannel, "test-client");
 
     // Act
     const roomDoor = await proxy.getRoomDoor("user1");
@@ -659,7 +684,9 @@ describe("GameServerProxy - Client-Server Communication", () => {
     connectServerToChannel(server, serverChannel2);
 
     const proxy1 = createGameServerProxy(clientChannel1);
+    sendClientConnected(serverChannel1, "client-1");
     const proxy2 = createGameServerProxy(clientChannel2);
+    sendClientConnected(serverChannel2, "client-2");
 
     const tracker1 = createCallbackTracker<RoomsProjection>();
     const tracker2 = createCallbackTracker<RoomsProjection>();

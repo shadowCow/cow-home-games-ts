@@ -82,6 +82,16 @@ fastify.register(async (fastify) => {
     // Store the connection
     clientConnections.set(clientId, { socket });
 
+    // Send the server-assigned client ID to the client
+    socket.send(JSON.stringify({ kind: "ClientConnected", clientId }));
+
+    // Send periodic pings to keep the connection alive
+    const pingInterval = setInterval(() => {
+      if (socket.readyState === socket.OPEN) {
+        socket.ping();
+      }
+    }, 30000);
+
     // Handle incoming messages from client
     socket.on('message', (messageBuffer: Buffer) => {
       try {
@@ -89,13 +99,8 @@ fastify.register(async (fastify) => {
         const message = JSON.parse(messageString);
 
         // Forward message to GameServer
-        const response = gameServer.handleMessage(message);
-
-        // Optionally send response back to client
-        // (Note: Most communication happens via broadcast callback)
-        if (response && response.kind !== 'ValidationFailure') {
-          socket.send(JSON.stringify(response));
-        }
+        // All client communication happens via the onBroadcast callback
+        gameServer.handleMessage(message);
       } catch (error) {
         fastify.log.error({ error }, 'Error processing WebSocket message');
       }
@@ -103,6 +108,7 @@ fastify.register(async (fastify) => {
 
     // Clean up on disconnect
     socket.on('close', () => {
+      clearInterval(pingInterval);
       fastify.log.info(`WebSocket client disconnected: ${clientId}`);
       clientConnections.delete(clientId);
     });

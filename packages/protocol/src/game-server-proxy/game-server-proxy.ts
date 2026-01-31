@@ -51,8 +51,24 @@ export type GameServerProxy = {
 export function createGameServerProxy(
   channel: JsonMessageChannel
 ): GameServerProxy {
-  // Generate a unique client ID for this proxy
-  const clientId = `client-${Math.random().toString(36).substring(2, 11)}`;
+  // Client ID assigned by the server via handshake
+  let clientId: string | undefined = undefined;
+  const outgoingQueue: Array<() => void> = [];
+
+  function sendWhenReady(send: () => void): void {
+    if (clientId) {
+      send();
+    } else {
+      outgoingQueue.push(send);
+    }
+  }
+
+  function flushOutgoingQueue(): void {
+    while (outgoingQueue.length > 0) {
+      const send = outgoingQueue.shift()!;
+      send();
+    }
+  }
 
   // Create FstFollower with the roomsProjectionReducer for rooms list
   const roomsFollower = createFstFollower<
@@ -94,6 +110,12 @@ export function createGameServerProxy(
 
       // Route to appropriate store based on message context
       switch (validatedMessage.kind) {
+        case "ClientConnected": {
+          clientId = validatedMessage.clientId;
+          flushOutgoingQueue();
+          break;
+        }
+
         case "Snapshot": {
           // Try to parse as RoomsProjection snapshot
           const roomsProjectionParseResult = RoomsProjection.safeParse(
@@ -214,7 +236,7 @@ export function createGameServerProxy(
       command: RoomCollectionCommand
     ): Promise<Result<RoomCollectionEvent, RoomCollectionError>> {
       // Send command to server
-      channel.send(JSON.stringify(command), "");
+      sendWhenReady(() => channel.send(JSON.stringify(command), ""));
 
       // TODO: Implement proper request-response pattern
       // For now, return a placeholder success result
@@ -226,11 +248,13 @@ export function createGameServerProxy(
       callback: (projection: RoomsProjection) => void
     ): () => void {
       // Send subscription request to server
-      const subscribeMessage = {
-        kind: "SubscribeRooms",
-        clientId,
-      };
-      channel.send(JSON.stringify(subscribeMessage), "");
+      sendWhenReady(() => {
+        const subscribeMessage = {
+          kind: "SubscribeRooms",
+          clientId,
+        };
+        channel.send(JSON.stringify(subscribeMessage), "");
+      });
 
       // Subscribe to the rooms store
       return roomsStore.subscribe(callback);
@@ -240,13 +264,15 @@ export function createGameServerProxy(
       command: RoomCommand
     ): Promise<Result<RoomEvent, RoomError>> {
       // Send UpdateEntity command to server
-      const updateCommand = {
-        kind: "UpdateEntity",
-        entityType: "Room",
-        id: command.roomId,
-        command: command,
-      };
-      channel.send(JSON.stringify(updateCommand), "");
+      sendWhenReady(() => {
+        const updateCommand = {
+          kind: "UpdateEntity",
+          entityType: "Room",
+          id: command.roomId,
+          command: command,
+        };
+        channel.send(JSON.stringify(updateCommand), "");
+      });
 
       // TODO: Implement proper request-response pattern
       // For now, return a placeholder success result
@@ -272,12 +298,14 @@ export function createGameServerProxy(
       roomCallbacks.set(callbackId, entry);
 
       // Send subscription request to server
-      const subscribeMessage = {
-        kind: "SubscribeRoom",
-        clientId,
-        roomId,
-      };
-      channel.send(JSON.stringify(subscribeMessage), "");
+      sendWhenReady(() => {
+        const subscribeMessage = {
+          kind: "SubscribeRoom",
+          clientId,
+          roomId,
+        };
+        channel.send(JSON.stringify(subscribeMessage), "");
+      });
 
       // Return unsubscribe function that works before and after store creation
       return () => {
@@ -295,13 +323,15 @@ export function createGameServerProxy(
       return new Promise((resolve) => {
         pendingRequests.set(requestId, resolve);
 
-        const message = {
-          kind: "GetRoomDoor",
-          clientId,
-          requestId,
-          owner,
-        };
-        channel.send(JSON.stringify(message), "");
+        sendWhenReady(() => {
+          const message = {
+            kind: "GetRoomDoor",
+            clientId,
+            requestId,
+            owner,
+          };
+          channel.send(JSON.stringify(message), "");
+        });
       });
     },
   };

@@ -70,6 +70,13 @@ export type GameServerIncomingMessage = z.infer<
   typeof GameServerIncomingMessage
 >;
 
+export const ClientConnected = z.object({
+  kind: z.literal("ClientConnected"),
+  clientId: z.string(),
+});
+
+export type ClientConnected = z.infer<typeof ClientConnected>;
+
 export const GetRoomDoorResponse = z.object({
   kind: z.literal("GetRoomDoorResponse"),
   requestId: z.string(),
@@ -81,6 +88,7 @@ export type GetRoomDoorResponse = z.infer<typeof GetRoomDoorResponse>;
 // Messages that server can send to clients
 // Can send snapshots and events for both RoomsProjection and individual RoomState
 export const GameServerOutgoingMessage = z.discriminatedUnion("kind", [
+  ClientConnected,
   IndexedEvent(z.any()), // Can be CollectionEvent or RoomEvent
   Snapshot(z.any()), // Can be RoomsProjection or RoomState
   GetRoomDoorResponse,

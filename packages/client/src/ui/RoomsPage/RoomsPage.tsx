@@ -64,7 +64,9 @@ export function RoomsPage(props: {
       <div className={styles.roomsListSection}>
         <RoomsList
           rooms={rooms}
-          navigate={props.navigate}
+          joinRoom={(roomId) => {
+            props.navigate({ type: "NavigateToRoomEntry", roomId });
+          }}
         />
       </div>
     </div>

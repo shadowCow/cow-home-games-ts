@@ -11,8 +11,16 @@
 
 .roomItem {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   padding: 1rem;
+  gap: 1rem;
+}
+
+.roomInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   gap: 0.25rem;
 }
 

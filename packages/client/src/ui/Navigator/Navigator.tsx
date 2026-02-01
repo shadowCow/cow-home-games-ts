@@ -2,6 +2,7 @@ import { useReducer, Dispatch } from "react";
 import { GameService } from "../../services/game/GameService";
 import { GameRegistry } from "../../games/GameRegistry";
 import { RoomsPage } from "../RoomsPage/RoomsPage";
+import { RoomEntry } from "../RoomEntry/RoomEntry";
 import { RoomPage } from "../RoomPage/RoomPage";
 import { GamesPage } from "../GamesPage/GamesPage";
 import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
@@ -33,6 +34,21 @@ export function Navigator(props: {
           user={props.user}
           gameServerProxy={props.gameServerProxy}
           navigate={dispatch}
+        />
+      );
+    case "RoomEntry":
+      return (
+        <RoomEntry
+          roomId={state.currentView.roomId}
+          onJoin={(roomId, code) => {
+            props.gameServerProxy.offerRoomCommand({
+              kind: "JoinRoom",
+              roomId,
+              userId: props.user.username,
+              code,
+            });
+            dispatch({ type: "NavigateToRoom", roomId });
+          }}
         />
       );
     case "Room":

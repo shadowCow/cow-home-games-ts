@@ -15,6 +15,7 @@ import {
 export const RoomSession = z.object({
   kind: z.literal("RoomSession"),
   sessionId: z.string(),
+  gameId: z.string(),
 });
 
 export type RoomSession = z.infer<typeof RoomSession>;
@@ -112,6 +113,7 @@ export const StartGameSession = z.object({
   roomId: z.string(),
   requesterId: z.string(),
   sessionId: z.string(),
+  gameId: z.string(),
 });
 
 export type StartGameSession = z.infer<typeof StartGameSession>;
@@ -187,6 +189,7 @@ export const GameSessionStarted = z.object({
   kind: z.literal("GameSessionStarted"),
   roomId: z.string(),
   sessionId: z.string(),
+  gameId: z.string(),
 });
 
 export type GameSessionStarted = z.infer<typeof GameSessionStarted>;
@@ -366,6 +369,7 @@ function handleRoomCommand(
         kind: "GameSessionStarted",
         roomId: command.roomId,
         sessionId: command.sessionId,
+        gameId: command.gameId,
       });
     }
 
@@ -439,7 +443,7 @@ function roomReducer(state: RoomState, event: RoomEvent): RoomState {
     case "GameSessionStarted":
       return {
         ...state,
-        activeSession: { kind: "RoomSession", sessionId: event.sessionId },
+        activeSession: { kind: "RoomSession", sessionId: event.sessionId, gameId: event.gameId },
       };
 
     case "GameSessionBuilderStarted":

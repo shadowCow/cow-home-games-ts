@@ -341,6 +341,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -375,6 +376,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "guest1",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -396,6 +398,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Act
@@ -404,6 +407,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session789",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -483,6 +487,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Act
@@ -512,6 +517,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Act
@@ -573,6 +579,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session456",
+        gameId: "tic-tac-toe",
       });
 
       // Act
@@ -758,6 +765,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         sessionId: "session1",
+        gameId: "tic-tac-toe",
       });
       state = room.getState();
       assert.equal(state.activeSession.kind, "RoomSession");

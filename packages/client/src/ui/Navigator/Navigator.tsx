@@ -53,6 +53,7 @@ export function Navigator(props: {
       return (
         <RoomPage
           gameServerProxy={props.gameServerProxy}
+          gameRegistry={props.gameRegistry}
           roomId={state.currentView.roomId}
           navigate={dispatch}
         />

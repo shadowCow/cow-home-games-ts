@@ -1,13 +1,15 @@
 import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
-import { GameServerProxy, RoomState, RoomSessionState } from "@cow-sunday/protocol";
+import { GameServerProxy, RoomState, RoomSessionState, RoomSessionBuilder, RoomSession } from "@cow-sunday/protocol";
 import { Button } from "../common/Button/Button";
 import { Loading } from "../common/Loading/Loading";
 import { CopyableText } from "../common/CopyableText/CopyableText";
+import { GameRegistry } from "../../games/GameRegistry";
 import styles from "./RoomPage.module.css";
 
 export function RoomPage(props: {
   gameServerProxy: GameServerProxy;
+  gameRegistry: GameRegistry;
   roomId: string;
   navigate: Dispatch<NavigationAction>;
 }) {
@@ -61,13 +63,15 @@ export function RoomPage(props: {
 
         <SessionView
           activeSession={room.activeSession}
+          gameRegistry={props.gameRegistry}
           onNewGame={() => props.navigate({ type: "NavigateToGames", roomId: props.roomId })}
-          onCreateSession={() => {
+          onCreateSession={(gameId) => {
             props.gameServerProxy.offerRoomCommand({
               kind: "StartGameSession",
               roomId: props.roomId,
               requesterId: room.owner,
               sessionId: crypto.randomUUID(),
+              gameId,
             });
           }}
         />
@@ -82,26 +86,30 @@ export function RoomPage(props: {
   );
 }
 
-function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => void; onCreateSession: () => void }) {
+function SessionView(props: {
+  activeSession: RoomSessionState;
+  gameRegistry: GameRegistry;
+  onNewGame: () => void;
+  onCreateSession: (gameId: string) => void;
+}) {
   const renderContent = () => {
     switch (props.activeSession.kind) {
       case "RoomNoSession":
-        return (
-          <>
-            <p className={styles.emptyMessage}>No Game Session</p>
-            <Button onClick={props.onNewGame}>New Game</Button>
-          </>
-        );
+        return <NoSessionView onNewGame={props.onNewGame} />;
       case "RoomSessionBuilder":
         return (
-          <>
-            <p className={styles.value}>Setting up game</p>
-            <p className={styles.value}>{props.activeSession.gameId}</p>
-            <Button onClick={props.onCreateSession}>Create</Button>
-          </>
+          <SessionBuilderView
+            session={props.activeSession}
+            onCreateSession={props.onCreateSession}
+          />
         );
       case "RoomSession":
-        return <p className={styles.value}>{props.activeSession.sessionId}</p>;
+        return (
+          <ActiveSessionView
+            session={props.activeSession}
+            gameRegistry={props.gameRegistry}
+          />
+        );
     }
   };
 
@@ -111,4 +119,37 @@ function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => 
       {renderContent()}
     </div>
   );
+}
+
+function NoSessionView(props: { onNewGame: () => void }) {
+  return (
+    <>
+      <p className={styles.emptyMessage}>No Game Session</p>
+      <Button onClick={props.onNewGame}>New Game</Button>
+    </>
+  );
+}
+
+function SessionBuilderView(props: {
+  session: RoomSessionBuilder;
+  onCreateSession: (gameId: string) => void;
+}) {
+  return (
+    <>
+      <p className={styles.value}>Setting up game</p>
+      <p className={styles.value}>{props.session.gameId}</p>
+      <Button onClick={() => props.onCreateSession(props.session.gameId)}>Create</Button>
+    </>
+  );
+}
+
+function ActiveSessionView(props: {
+  session: RoomSession;
+  gameRegistry: GameRegistry;
+}) {
+  const GameComponent = props.gameRegistry[props.session.gameId];
+  if (!GameComponent) {
+    return <p className={styles.emptyMessage}>Unknown game: {props.session.gameId}</p>;
+  }
+  return <GameComponent gameState={{}} />;
 }

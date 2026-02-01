@@ -42,9 +42,8 @@ const gameServer = createGameServer({
     // Find the client's WebSocket and send the message
     const connection = clientConnections.get(clientId);
     if (connection) {
-      const messageString = JSON.stringify(message);
-      log.info(`[ws out] [${clientId}] ${messageString}`);
-      connection.socket.send(messageString);
+      log.info("[ws out]", { clientId, ...message });
+      connection.socket.send(JSON.stringify(message));
     }
   }
 });
@@ -101,8 +100,8 @@ fastify.register(async (fastify) => {
     socket.on('message', (messageBuffer: Buffer) => {
       try {
         const messageString = messageBuffer.toString();
-        log.info(`[ws in] [${clientId}] ${messageString}`);
         const message = JSON.parse(messageString);
+        log.info("[ws in]", { clientId, ...message });
 
         // Forward message to GameServer
         // All client communication happens via the onBroadcast callback

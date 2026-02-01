@@ -26,3 +26,19 @@
   color: var(--color-primary);
   margin: 0;
 }
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.copyButton:hover {
+  color: var(--color-text);
+}

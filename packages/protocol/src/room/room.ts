@@ -22,6 +22,7 @@ export type RoomSession = z.infer<typeof RoomSession>;
 export const RoomSessionBuilder = z.object({
   kind: z.literal("RoomSessionBuilder"),
   builderId: z.string(),
+  gameId: z.string(),
 });
 
 export type RoomSessionBuilder = z.infer<typeof RoomSessionBuilder>;
@@ -53,7 +54,7 @@ export type RoomState = z.infer<typeof RoomState>;
 function createInitialRoomState(
   id: string,
   ownerId: string,
-  code: string
+  code: string,
 ): RoomState {
   return {
     id: id,
@@ -67,7 +68,7 @@ function createInitialRoomState(
 function createInitialRoomSnapshot(
   id: string,
   ownerId: string,
-  code: string
+  code: string,
 ): Snapshot<RoomState> {
   return {
     kind: "Snapshot",
@@ -120,6 +121,7 @@ export const StartGameSessionBuilder = z.object({
   roomId: z.string(),
   requesterId: z.string(),
   builderId: z.string(),
+  gameId: z.string(),
 });
 
 export type StartGameSessionBuilder = z.infer<typeof StartGameSessionBuilder>;
@@ -193,6 +195,7 @@ export const GameSessionBuilderStarted = z.object({
   kind: z.literal("GameSessionBuilderStarted"),
   roomId: z.string(),
   builderId: z.string(),
+  gameId: z.string(),
 });
 
 export type GameSessionBuilderStarted = z.infer<
@@ -286,7 +289,7 @@ export type RoomError = z.infer<typeof RoomError>;
 
 function handleRoomCommand(
   state: RoomState,
-  command: RoomCommand
+  command: RoomCommand,
 ): Result<RoomEvent, RoomError> {
   switch (command.kind) {
     case "JoinRoom": {
@@ -381,6 +384,7 @@ function handleRoomCommand(
         kind: "GameSessionBuilderStarted",
         roomId: command.roomId,
         builderId: command.builderId,
+        gameId: command.gameId,
       });
     }
 
@@ -444,6 +448,7 @@ function roomReducer(state: RoomState, event: RoomEvent): RoomState {
         activeSession: {
           kind: "RoomSessionBuilder",
           builderId: event.builderId,
+          gameId: event.gameId,
         },
       };
 
@@ -468,18 +473,18 @@ function roomReducer(state: RoomState, event: RoomEvent): RoomState {
 export function createRoomLeader(
   id: string,
   ownerId: string,
-  code: string
+  code: string,
 ): FstLeader<RoomState, RoomCommand, RoomEvent, RoomError> {
   return createFstLeader<RoomState, RoomCommand, RoomEvent, RoomError, void>(
     handleRoomCommand,
     roomReducer,
     undefined,
-    createInitialRoomSnapshot(id, ownerId, code)
+    createInitialRoomSnapshot(id, ownerId, code),
   );
 }
 
 export function createRoomFollower(
-  initialSnapshot: Snapshot<RoomState>
+  initialSnapshot: Snapshot<RoomState>,
 ): FstFollower<RoomState, RoomEvent> {
   return createFstFollower<RoomState, RoomEvent>(roomReducer, initialSnapshot);
 }

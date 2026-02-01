@@ -57,9 +57,24 @@ describe("Room", () => {
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
 
       // Act
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest3", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest3",
+        code: VALID_CODE,
+      });
 
       // Assert
       const state = room.getState();
@@ -69,10 +84,20 @@ describe("Room", () => {
     test("should return error when guest already in room", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
 
       // Act
-      const result = room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      const result = room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
 
       // Assert
       assert.equal(result.kind, "Err");
@@ -90,7 +115,12 @@ describe("Room", () => {
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
 
       // Act
-      const result = room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "owner123", code: VALID_CODE });
+      const result = room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "owner123",
+        code: VALID_CODE,
+      });
 
       // Assert
       assert.equal(result.kind, "Err");
@@ -128,11 +158,25 @@ describe("Room", () => {
     test("should allow guest to leave room", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+        code: VALID_CODE,
+      });
 
       // Act
-      const result = room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "guest1" });
+      const result = room.handleCommand({
+        kind: "LeaveRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+      });
 
       // Assert
       assert.equal(result.kind, "Ok");
@@ -152,7 +196,11 @@ describe("Room", () => {
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
 
       // Act
-      const result = room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "nonexistent" });
+      const result = room.handleCommand({
+        kind: "LeaveRoom",
+        roomId: ROOM_ID,
+        userId: "nonexistent",
+      });
 
       // Assert
       assert.equal(result.kind, "Err");
@@ -170,7 +218,11 @@ describe("Room", () => {
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
 
       // Act
-      const result = room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "owner123" });
+      const result = room.handleCommand({
+        kind: "LeaveRoom",
+        roomId: ROOM_ID,
+        userId: "owner123",
+      });
 
       // Assert
       assert.equal(result.kind, "Err");
@@ -185,8 +237,18 @@ describe("Room", () => {
     test("should allow owner to remove guest", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+        code: VALID_CODE,
+      });
 
       // Act
       const result = room.handleCommand({
@@ -212,8 +274,18 @@ describe("Room", () => {
     test("should return error when non-owner tries to remove guest", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+        code: VALID_CODE,
+      });
 
       // Act
       const result = room.handleCommand({
@@ -290,7 +362,12 @@ describe("Room", () => {
     test("should return error when non-owner tries to start session", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
 
       // Act
       const result = room.handleCommand({
@@ -349,6 +426,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         builderId: "builder789",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -370,7 +448,12 @@ describe("Room", () => {
     test("should return error when non-owner tries to start builder", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
 
       // Act
       const result = room.handleCommand({
@@ -378,6 +461,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "guest1",
         builderId: "builder789",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -407,6 +491,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         builderId: "builder789",
+        gameId: "tic-tac-toe",
       });
 
       // Assert
@@ -454,6 +539,7 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         builderId: "builder789",
+        gameId: "tic-tac-toe",
       });
 
       // Act
@@ -476,7 +562,12 @@ describe("Room", () => {
     test("should return error when non-owner tries to clear session", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
       room.handleCommand({
         kind: "StartGameSession",
         roomId: ROOM_ID,
@@ -554,7 +645,12 @@ describe("Room", () => {
     test("should return error when non-owner tries to change code", () => {
       // Arrange
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
 
       // Act
       const result = room.handleCommand({
@@ -619,9 +715,24 @@ describe("Room", () => {
       const room = createRoomLeader(ROOM_ID, "owner123", VALID_CODE);
 
       // Act & Assert - Guests join
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest1", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest2", code: VALID_CODE });
-      room.handleCommand({ kind: "JoinRoom", roomId: ROOM_ID, userId: "guest3", code: VALID_CODE });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest1",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+        code: VALID_CODE,
+      });
+      room.handleCommand({
+        kind: "JoinRoom",
+        roomId: ROOM_ID,
+        userId: "guest3",
+        code: VALID_CODE,
+      });
       let state = room.getState();
       assert.deepEqual(state.guests, ["guest1", "guest2", "guest3"]);
 
@@ -631,12 +742,17 @@ describe("Room", () => {
         roomId: ROOM_ID,
         requesterId: "owner123",
         builderId: "builder1",
+        gameId: "tic-tac-toe",
       });
       state = room.getState();
       assert.equal(state.activeSession.kind, "RoomSessionBuilder");
 
       // Act & Assert - Clear and start session
-      room.handleCommand({ kind: "ClearRoomSession", roomId: ROOM_ID, requesterId: "owner123" });
+      room.handleCommand({
+        kind: "ClearRoomSession",
+        roomId: ROOM_ID,
+        requesterId: "owner123",
+      });
       room.handleCommand({
         kind: "StartGameSession",
         roomId: ROOM_ID,
@@ -647,7 +763,11 @@ describe("Room", () => {
       assert.equal(state.activeSession.kind, "RoomSession");
 
       // Act & Assert - Guest leaves
-      room.handleCommand({ kind: "LeaveRoom", roomId: ROOM_ID, userId: "guest2" });
+      room.handleCommand({
+        kind: "LeaveRoom",
+        roomId: ROOM_ID,
+        userId: "guest2",
+      });
       state = room.getState();
       assert.deepEqual(state.guests, ["guest1", "guest3"]);
 

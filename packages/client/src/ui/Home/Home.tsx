@@ -3,11 +3,13 @@ import { Navigator } from "../Navigator/Navigator";
 import { HeaderBar } from "../common/HeaderBar/HeaderBar";
 import { GameServerProxyWs } from "../../services/game/ProxyWithWebsocket";
 import { GameRegistry } from "../../games/GameRegistry";
+import { GameService } from "../../services/game/GameService";
 import { User } from "../../services/auth/User";
 import styles from "./Home.module.css";
 
 export function Home(props: {
   user: User;
+  gameService: GameService;
   gameServerProxy: GameServerProxyWs;
   gameRegistry: GameRegistry;
 }) {
@@ -27,6 +29,7 @@ export function Home(props: {
       <div className={styles.main}>
         <Navigator
           user={props.user}
+          gameService={props.gameService}
           gameServerProxy={props.gameServerProxy}
           gameRegistry={props.gameRegistry}
         />

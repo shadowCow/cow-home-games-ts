@@ -1,29 +1,27 @@
-import { useReducer, Dispatch } from "react";
+import { useReducer } from "react";
 import { GameService } from "../../services/game/GameService";
 import { GameRegistry } from "../../games/GameRegistry";
 import { RoomsPage } from "../RoomsPage/RoomsPage";
 import { RoomEntry } from "../RoomEntry/RoomEntry";
 import { RoomPage } from "../RoomPage/RoomPage";
 import { GamesPage } from "../GamesPage/GamesPage";
-import { GameSessionBuilderPage } from "../GameSessionBuilderPage/GameSessionBuilderPage";
-import { GameSessionView } from "../GameSessionPage/GameSessionPage";
 import {
   navigationReducer,
   createInitialNavigationState,
-  NavigationAction,
 } from "./navigationReducer";
 import { GameServerProxy } from "@cow-sunday/protocol";
 import { User } from "../../services/auth/User";
 
 export function Navigator(props: {
   user: User;
+  gameService: GameService;
   gameServerProxy: GameServerProxy;
   gameRegistry: GameRegistry;
 }) {
   const [state, dispatch] = useReducer(
     navigationReducer,
     undefined,
-    createInitialNavigationState
+    createInitialNavigationState,
   );
 
   // Render the current view
@@ -59,8 +57,28 @@ export function Navigator(props: {
           navigate={dispatch}
         />
       );
-    // case "Games":
-    //   return <GamesPage gameService={props.gameService} navigate={dispatch} />;
+    case "Games": {
+      const gamesView = state.currentView;
+      return (
+        <GamesPage
+          roomId={gamesView.roomId}
+          gameService={props.gameService}
+          onBack={() =>
+            dispatch({ type: "NavigateToRoom", roomId: gamesView.roomId })
+          }
+          onConfirm={(gameId) => {
+            props.gameServerProxy.offerRoomCommand({
+              kind: "StartGameSessionBuilder",
+              roomId: gamesView.roomId,
+              requesterId: props.user.username,
+              builderId: crypto.randomUUID(),
+              gameId,
+            });
+            dispatch({ type: "NavigateToRoom", roomId: gamesView.roomId });
+          }}
+        />
+      );
+    }
     // case "GameSessionBuilder":
     //   return (
     //     <GameSessionBuilderPage

@@ -1,13 +1,14 @@
-import { useState, useEffect, Dispatch } from "react";
+import { useState, useEffect } from "react";
 import { Game } from "@cow-sunday/protocol";
 import { GameService } from "../../services/game/GameService";
-import { NavigationAction } from "../Navigator/navigationReducer";
 import { Button } from "../common/Button/Button";
 import styles from "./GamesPage.module.css";
 
 export function GamesPage(props: {
+  roomId: string;
   gameService: GameService;
-  navigate: Dispatch<NavigationAction>;
+  onBack: () => void;
+  onConfirm: (gameId: string) => void;
 }) {
   const [games, setGames] = useState<Game[]>([]);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
@@ -23,15 +24,11 @@ export function GamesPage(props: {
 
   const handleConfirm = () => {
     if (!selectedGame) return;
-    console.log("Confirm button clicked with selected game:", selectedGame);
-    props.navigate({
-      type: "NavigateToGameSessionBuilder",
-      selectedGameName: selectedGame,
-    });
+    props.onConfirm(selectedGame);
   };
 
   const handleBack = () => {
-    props.navigate({ type: "NavigateToGameSessions" });
+    props.onBack();
   };
 
   return (

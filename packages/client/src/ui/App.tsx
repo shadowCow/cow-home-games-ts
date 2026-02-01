@@ -5,9 +5,11 @@ import { AuthGateway } from "../services/auth/AuthGateway";
 import { GameRegistry } from "../games/GameRegistry";
 import { User } from "../services/auth/User";
 import { GameServerProxyWs } from "../services/game/ProxyWithWebsocket";
+import { GameService } from "../services/game/GameService";
 
 function App(props: {
   authGateway: AuthGateway;
+  gameService: GameService;
   gameServerProxy: GameServerProxyWs;
   gameRegistry: GameRegistry;
 }) {
@@ -34,6 +36,7 @@ function App(props: {
   return (
     <Home
       user={user}
+      gameService={props.gameService}
       gameServerProxy={props.gameServerProxy}
       gameRegistry={props.gameRegistry}
     />

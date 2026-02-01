@@ -1,6 +1,6 @@
 import { Dispatch, useState, useEffect } from "react";
 import { NavigationAction } from "../Navigator/navigationReducer";
-import { GameServerProxy, RoomState } from "@cow-sunday/protocol";
+import { GameServerProxy, RoomState, RoomSessionState } from "@cow-sunday/protocol";
 import { Button } from "../common/Button/Button";
 import { Loading } from "../common/Loading/Loading";
 import { CopyableText } from "../common/CopyableText/CopyableText";
@@ -59,10 +59,10 @@ export function RoomPage(props: {
           )}
         </div>
 
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>Active Session</h2>
-          <p className={styles.value}>{room.activeSession.kind}</p>
-        </div>
+        <SessionView
+          activeSession={room.activeSession}
+          onNewGame={() => props.navigate({ type: "NavigateToGames", roomId: props.roomId })}
+        />
 
         <div className={styles.actions}>
           <Button onClick={() => props.navigate({ type: "NavigateToRooms" })}>
@@ -70,6 +70,36 @@ export function RoomPage(props: {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => void }) {
+  const renderContent = () => {
+    switch (props.activeSession.kind) {
+      case "RoomNoSession":
+        return (
+          <>
+            <p className={styles.emptyMessage}>No Game Session</p>
+            <Button onClick={props.onNewGame}>New Game</Button>
+          </>
+        );
+      case "RoomSessionBuilder":
+        return (
+          <>
+            <p className={styles.value}>Setting up game</p>
+            <p className={styles.value}>{props.activeSession.gameId}</p>
+          </>
+        );
+      case "RoomSession":
+        return <p className={styles.value}>{props.activeSession.sessionId}</p>;
+    }
+  };
+
+  return (
+    <div className={styles.section}>
+      <h2 className={styles.sectionTitle}>Active Session</h2>
+      {renderContent()}
     </div>
   );
 }

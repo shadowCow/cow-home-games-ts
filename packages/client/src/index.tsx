@@ -47,6 +47,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App
       authGateway={authGateway}
+      gameService={gameService}
       gameServerProxy={gameServerProxy}
       gameRegistry={gameRegistry}
     />

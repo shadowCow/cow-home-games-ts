@@ -16,6 +16,7 @@ import { registerGameRoutes } from './game/GameApi';
 import { RoomRepoInMemory } from './room/RoomRepoInMemory';
 import { registerRoomRoutes } from './room/RoomApi';
 import { config } from './config';
+import { createFastifyLoggingService } from './logging/LoggingServiceFastify';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,8 @@ await fastify.register(fastifyJwt, {
 // Register WebSocket plugin
 await fastify.register(fastifyWebsocket);
 
+const log = createFastifyLoggingService(fastify.log);
+
 // Create GameServer instance
 const gameServer = createGameServer({
   maxSubscribers: 1000,
@@ -39,7 +42,9 @@ const gameServer = createGameServer({
     // Find the client's WebSocket and send the message
     const connection = clientConnections.get(clientId);
     if (connection) {
-      connection.socket.send(JSON.stringify(message));
+      const messageString = JSON.stringify(message);
+      log.info(`[ws out] [${clientId}] ${messageString}`);
+      connection.socket.send(messageString);
     }
   }
 });
@@ -96,6 +101,7 @@ fastify.register(async (fastify) => {
     socket.on('message', (messageBuffer: Buffer) => {
       try {
         const messageString = messageBuffer.toString();
+        log.info(`[ws in] [${clientId}] ${messageString}`);
         const message = JSON.parse(messageString);
 
         // Forward message to GameServer

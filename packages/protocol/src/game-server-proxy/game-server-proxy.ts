@@ -193,11 +193,11 @@ export function createGameServerProxy(
           }
 
           // Try to parse as room event (for subscribed room)
-          if (roomStore && subscribedRoomId) {
-            const roomEventParseResult = RoomEvent.safeParse(
-              validatedMessage.event
-            );
-            if (roomEventParseResult.success) {
+          const roomEventParseResult = RoomEvent.safeParse(
+            validatedMessage.event
+          );
+          if (roomEventParseResult.success) {
+            if (roomStore && subscribedRoomId) {
               const roomIndexedEvent: IndexedEvent<RoomEvent> = {
                 kind: "IndexedEvent",
                 index: validatedMessage.index,
@@ -207,8 +207,8 @@ export function createGameServerProxy(
               if (result.kind === "Err") {
                 console.error("Failed to apply room event:", result.value);
               }
-              break;
             }
+            break;
           }
 
           console.error(

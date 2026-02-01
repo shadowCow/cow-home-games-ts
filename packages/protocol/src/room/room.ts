@@ -357,8 +357,8 @@ function handleRoomCommand(
         return err({ kind: "NotOwner", userId: command.requesterId });
       }
 
-      // Cannot start if session already active
-      if (state.activeSession.kind !== "RoomNoSession") {
+      // Can only start from NoSession or SessionBuilder states
+      if (state.activeSession.kind === "RoomSession") {
         return err({ kind: "SessionAlreadyActive" });
       }
 

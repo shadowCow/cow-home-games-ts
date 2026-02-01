@@ -62,6 +62,14 @@ export function RoomPage(props: {
         <SessionView
           activeSession={room.activeSession}
           onNewGame={() => props.navigate({ type: "NavigateToGames", roomId: props.roomId })}
+          onCreateSession={() => {
+            props.gameServerProxy.offerRoomCommand({
+              kind: "StartGameSession",
+              roomId: props.roomId,
+              requesterId: room.owner,
+              sessionId: crypto.randomUUID(),
+            });
+          }}
         />
 
         <div className={styles.actions}>
@@ -74,7 +82,7 @@ export function RoomPage(props: {
   );
 }
 
-function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => void }) {
+function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => void; onCreateSession: () => void }) {
   const renderContent = () => {
     switch (props.activeSession.kind) {
       case "RoomNoSession":
@@ -89,6 +97,7 @@ function SessionView(props: { activeSession: RoomSessionState; onNewGame: () => 
           <>
             <p className={styles.value}>Setting up game</p>
             <p className={styles.value}>{props.activeSession.gameId}</p>
+            <Button onClick={props.onCreateSession}>Create</Button>
           </>
         );
       case "RoomSession":
